@@ -5,8 +5,8 @@
 - Psychopy 3.0
 
 ## Features of the Experiments
-- Switch the image whether you gaze the left side or right side of the screen
-- Track your eyes
+- Switch the image whether you gaze left side or right side of the screen(eyes_move_with_you.py)
+- Trace your eyes(trace_eyes.py)
 
 
 ## Usage
@@ -35,6 +35,10 @@ Once you calibrate your eye, the parameter is saved in the eye tracker internall
 
 ### 5. Excute the experiments
 In PsychoPy editor, select the experiment in this repo and the run it.
+
+### 6. Analize the eyes' movements(optional)
+Run `analyze.py` to draw eyes' tracing
+
 
 ## Notice
 Any sampling rate is OK when you calibrate your eye.

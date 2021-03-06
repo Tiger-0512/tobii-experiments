@@ -33,10 +33,10 @@ $ psychopy
 Use [Tobii Pro Eye Tracker Manager](https://www.tobiipro.com/product-listing/eye-tracker-manager/) to calibrate.<br>
 Once you calibrate your eye, the parameter is saved in the eye tracker internally.<br>
 
-### 5. Excute the experiments
+### 5. Execute the experiments
 In PsychoPy editor, select the experiment in this repo and the run it.
 
-### 6. Analize the eyes' movements(optional)
+### 6. Analyze the eyes' movements(optional)
 Run `analyze.py` to draw eyes' tracing
 
 

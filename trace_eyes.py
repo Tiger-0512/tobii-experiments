@@ -41,23 +41,25 @@ magnification = posToPix(message1)[1]
 # Start eye tracking
 my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
 
+
+test_image = visual.ImageStim(
+    win,
+    image='C:\\Users\\CogInf\\Desktop\\youtuber.jpg',
+    units='norm',  # [(-1.0, 1.0), (-1.0, 1.0)]
+    size=[0.2, 0.2]
+    )
+
 while True:
     if len(out) != 0:
         x, y = out[-1][0]
-        if x != 'nan' and y != 'nan':
-            # Modify x, y that the origin becomes center of the display
-            y = -y
-            x, y = 2 * (x - 0.5), 2 * (y + 0.5)
+        # Modify x, y that the origin becomes center of the display
+        y = -y
+        x, y = 2 * (x - 0.5), 2 * (y + 0.5)
 
-            # Trace subject's eye
-            test_image = visual.ImageStim(
-                win,
-                image='C:\\Users\\CogInf\\Desktop\\youtuber.jpg',
-                pos=[(display_size[0] / magnification / 2) * x, (display_size[1] / magnification / 2) * y],
-                size=[3, 3]
-                )
-            test_image.draw()
-            win.flip(clearBuffer=True)
+        # Trace subject's eye
+        test_image.pos = (x, y)
+        test_image.draw()
+        win.flip(clearBuffer=True)
 
     # Escape command
     if 'space' in event.getKeys():

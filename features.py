@@ -18,8 +18,8 @@ def show_eyetracker(eyetracker):
     print("Width: {0}".format(display_area.width))
 
 
-def introduction():
-    win = visual.Window([1920, 1080], allowGUI=True, monitor='testMonitor', units='deg')
+def introduction(display_size):
+    win = visual.Window(display_size, allowGUI=True, monitor='testMonitor', units='deg')
     message = visual.TextStim(win, pos=[0, 1], text='Hit a Key when ready')
     message.draw()
     win.flip()

@@ -24,6 +24,7 @@ found_eyetrackers = tr.find_all_eyetrackers()
 my_eyetracker = found_eyetrackers[0]
 
 # Variables
+display_size = [1920, 1080]
 flag_l = False
 flag_r = False
 
@@ -34,7 +35,7 @@ out = []
 features.show_eyetracker(my_eyetracker)
 
 # Create and Show introduction
-win = features.introduction()[0]
+win = features.introduction(display_size)[0]
 
 
 # Start eye tracking

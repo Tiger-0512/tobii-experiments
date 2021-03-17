@@ -34,8 +34,8 @@ out = []
 features.show_eyetracker(my_eyetracker)
 
 # Create and Show introduction
-win, message1 = features.introduction()
-magnification = posToPix(message1)[1]
+win, message1 = features.introduction(display_size)
+# magnification = posToPix(message1)[1]
 
 
 # Start eye tracking

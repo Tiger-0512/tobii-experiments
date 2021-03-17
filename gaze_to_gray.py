@@ -42,12 +42,12 @@ out = []
 features.show_eyetracker(my_eyetracker)
 
 # Create and Show introduction
-win, message1 = features.introduction()
-magnification = posToPix(message1)[1]
+win, message1 = features.introduction(display_size)
 
 # For Test
 test = cv2.imread(img_path)
 cv2.imwrite(img_path[:-4] + '_copy' + img_path[-4:], test)
+
 
 # Start eye tracking
 my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)

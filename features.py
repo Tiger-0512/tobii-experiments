@@ -1,3 +1,4 @@
+import cv2
 from psychopy import visual, event
 
 
@@ -25,6 +26,18 @@ def introduction():
 
     event.waitKeys()
     return [win, message]
+
+
+def synthesize_images_with_mask(background_img, objective_img, mask):
+    # Make inverse mask
+    mask_inv = cv2.bitwise_not(mask)
+
+    # Synthesis
+    masked_obj = cv2.bitwise_and(objective_img, objective_img, mask=mask)
+    masked_bg = cv2.bitwise_and(background_img, background_img, mask=mask_inv)
+    synthesized_img = cv2.bitwise_or(masked_obj, masked_bg)
+
+    return synthesized_img
 
 
 def save_csv(df, path):

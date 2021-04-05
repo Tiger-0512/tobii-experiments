@@ -5,10 +5,11 @@
 - Psychopy 3.0
 
 ## Features of the Experiments
-- Switch the image whether you gaze left side or right side of the screen(eyes_move_with_you.py)
-- Trace your eyes(trace_eyes.py)
-- Indicate where you are looking on the backgroud image(show_where_you_look.py)
-- Turn to the gray scale from RGB where you are looking on the background image(gaze_to_gray.py)
+- Switch the image whether you gaze left side or right side of the screen(eyes_move_with_you.py).
+- Trace your eyes(trace_eyes.py).
+- Indicate where you are looking on the backgroud image(show_where_you_look.py).
+- Turn to the gray scale from RGB where you are looking on the background image(gaze_to_gray.py).
+- Make Gaze-Contingent-Display(GCD) with synthesizing high/low resolution images(gaze_contingent_display.py).
 
 ## Usage
 ### 1. Clone this reopsitory

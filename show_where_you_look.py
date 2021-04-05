@@ -41,7 +41,7 @@ my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dicti
 
 test_image = visual.ImageStim(
     win,
-    image='C:\\Users\\CogInf\\Desktop\\Nagasaki.jpg',
+    image='./images/Nagasaki.png',
     pos=[0, 0],
     )
 test_image.draw()

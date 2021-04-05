@@ -44,7 +44,7 @@ my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dicti
 
 test_image = visual.ImageStim(
     win,
-    image='C:\\Users\\CogInf\\Desktop\\youtuber.jpg',
+    image='./images/youtuber.jpg',
     units='norm',  # [(-1.0, 1.0), (-1.0, 1.0)]
     size=[0.2, 0.2]
     )

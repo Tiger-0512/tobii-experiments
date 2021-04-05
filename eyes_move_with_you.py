@@ -45,13 +45,13 @@ while True:
     if len(out) != 0 and len(out) % 300 == 0:
         # When a subject is looking at Left side in 1 seconds
         if flag_l and out[-1][0][0] < 0.5:
-            test_image = visual.ImageStim(win, image='C:\\Users\\CogInf\\Desktop\\eye_direction_right.jpg', pos=[0, 0])
+            test_image = visual.ImageStim(win, image='./images/eye_direction_right.jpg', pos=[0, 0])
             test_image.draw()
             win.flip(clearBuffer=True)
 
         # When a subject is looking at Right side in 1 seconds
         if flag_r and out[-1][0][0] > 0.5:
-            test_image = visual.ImageStim(win, image='C:\\Users\\CogInf\\Desktop\\eye_direction_left.jpg', pos=[0, 0])
+            test_image = visual.ImageStim(win, image='./images/eye_direction_left.jpg', pos=[0, 0])
             test_image.draw()
             win.flip(clearBuffer=True)
 

@@ -68,6 +68,8 @@ circle = visual.Circle(
 
 win.flip(clearBuffer=True)
 
+count = 0
+
 while True:
     if len(out) != 0:
         x, y = out[-1][0]
@@ -90,7 +92,6 @@ while True:
             # Save modified image
             cv2.imwrite(img_path, synthesized_img)
             test_image.image = img_path
-            test_image.draw()
 
             # Modify x, y that the origin becomes center of the display
             y = -y
@@ -100,6 +101,7 @@ while True:
             test_image.draw()
             circle.draw()
             win.flip(clearBuffer=True)
+            count += 1
 
     # Escape command
     if 'space' in event.getKeys():
@@ -114,6 +116,7 @@ path = './out.csv'
 features.save_csv(out, path)
 
 print(out.tail())
+print(count)
 
 core.quit()
 win.close()

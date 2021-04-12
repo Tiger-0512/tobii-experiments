@@ -35,7 +35,7 @@ img_resized_path = './images/oura_resized.jpg'
 img_original = Image.open(img_original_path)
 img_size = img_original.size
 img_resized = Image.open(img_resized_path).resize(img_size)
-mask_base = Image.new('L', img_size, 0)
+# mask_base = Image.new('L', img_size, 0)
 
 # Output file
 out = []
@@ -70,35 +70,47 @@ circle = visual.Circle(
 win.flip(clearBuffer=True)
 
 count = 0
+x_before = 0
+y_before = 0
+
+while len(out) == 0:
+    continue
 
 while True:
-    if len(out) != 0:
-        x, y = out[-1][0]
-        if not np.isnan(x) and not np.isnan(y):
-            # Trace subject's eye
-            img = img_original
-            gaze = (int(x * img_size[0]), int(y * img_size[1]))
+    x, y = out[-1][0]
 
-            tl, br = (gaze[0] - 300, gaze[1] - 300), (gaze[0] + 300, gaze[1] + 300)
+    if np.isnan(x) or np.isnan(y):
+        x = x_before
+        y = y_before
 
-            # Make mask
-            mask_base = Image.new('L', img_size, 0)
-            mask = ImageDraw.Draw(mask_base)
-            mask.ellipse((tl, br), fill=255)
-            # mask_base.save('./images/test.jpg')
+    # Trace subject's eye
+    img = img_original
+    gaze = (int(x * img_size[0]), int(y * img_size[1]))
 
-            # Save modified image
-            test = Image.composite(img_original, img_resized, mask_base)
-            test_image.image = test
-            # Modify x, y that the origin becomes center of the display
-            y = -y
-            x, y = 2 * (x - 0.5), 2 * (y + 0.5)
-            circle.pos = (x, y)
+    tl, br = (gaze[0] - 300, gaze[1] - 300), (gaze[0] + 300, gaze[1] + 300)
 
-            test_image.draw()
-            circle.draw()
-            win.flip(clearBuffer=True)
-            count += 1
+    # Create mask
+    mask_base = Image.new('L', img_size, 0)
+    mask = ImageDraw.Draw(mask_base)
+    mask.ellipse((tl, br), fill=255)
+    # mask_base.save('./images/test.jpg')
+
+    # Create modified image
+    test = Image.composite(img_original, img_resized, mask_base)
+    test_image.image = test
+
+    # Modify x, y that the origin becomes center of the display
+    y = -y
+    x, y = 2 * (x - 0.5), 2 * (y + 0.5)
+    circle.pos = (x, y)
+
+    test_image.draw()
+    circle.draw()
+    win.flip(clearBuffer=True)
+    count += 1
+
+    x_before = x
+    y_before = y
 
     # Escape command
     if 'space' in event.getKeys():

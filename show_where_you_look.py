@@ -13,9 +13,13 @@ def gaze_data_callback(gaze_data):
     # print("Left eye: ({gaze_left_eye}) \t Right eye: ({gaze_right_eye})".format(
     #     gaze_left_eye=gaze_data['left_gaze_point_on_display_area'],
     #     gaze_right_eye=gaze_data['right_gaze_point_on_display_area']))
-    
-    gaze_left_eye = gaze_data['left_gaze_point_on_display_area']  # (y_coordinate, x_coordinate)
-    gaze_right_eye = gaze_data['right_gaze_point_on_display_area']  # (y_coordinate, x_coordinate)
+
+    gaze_left_eye = gaze_data[
+        "left_gaze_point_on_display_area"
+    ]  # (y_coordinate, x_coordinate)
+    gaze_right_eye = gaze_data[
+        "right_gaze_point_on_display_area"
+    ]  # (y_coordinate, x_coordinate)
     out.append([gaze_left_eye, gaze_right_eye])
 
 
@@ -37,21 +41,23 @@ win, message1 = features.introduction(display_size)
 
 
 # Start eye tracking
-my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
+my_eyetracker.subscribe_to(
+    tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True
+)
 
 test_image = visual.ImageStim(
     win,
-    image='./images/Nagasaki.png',
+    image="./images/Nagasaki.png",
     pos=[0, 0],
-    )
+)
 test_image.draw()
 
 circle = visual.Circle(
     win,
-    units='norm',  # [(-1.0, 1.0), (-1.0, 1.0)],
-    size = (0.1 / (display_size[0] / display_size[1]), 0.1),
-    lineColor=(0, 255, 255)
-    )
+    units="norm",  # [(-1.0, 1.0), (-1.0, 1.0)],
+    size=(0.1 / (display_size[0] / display_size[1]), 0.1),
+    lineColor=(0, 255, 255),
+)
 
 win.flip(clearBuffer=True)
 
@@ -69,7 +75,7 @@ while True:
         win.flip(clearBuffer=True)
 
     # Escape command
-    if 'space' in event.getKeys():
+    if "space" in event.getKeys():
         break
 
 # End eye tracking
@@ -77,7 +83,7 @@ my_eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
 out = pd.DataFrame(out)
 
 # Save outputs as a csv file
-path = './out.csv'
+path = "./out.csv"
 features.save_csv(out, path)
 
 print(out.tail())

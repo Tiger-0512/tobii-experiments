@@ -21,9 +21,13 @@ def gaze_data_callback(gaze_data):
     # print("Left eye: ({gaze_left_eye}) \t Right eye: ({gaze_right_eye})".format(
     #     gaze_left_eye=gaze_data['left_gaze_point_on_display_area'],
     #     gaze_right_eye=gaze_data['right_gaze_point_on_display_area']))
-    
-    gaze_left_eye = gaze_data['left_gaze_point_on_display_area']  # (y_coordinate, x_coordinate)
-    gaze_right_eye = gaze_data['right_gaze_point_on_display_area']  # (y_coordinate, x_coordinate)
+
+    gaze_left_eye = gaze_data[
+        "left_gaze_point_on_display_area"
+    ]  # (y_coordinate, x_coordinate)
+    gaze_right_eye = gaze_data[
+        "right_gaze_point_on_display_area"
+    ]  # (y_coordinate, x_coordinate)
     out.append([gaze_left_eye, gaze_right_eye])
 
 
@@ -33,7 +37,7 @@ my_eyetracker = found_eyetrackers[0]
 
 # Variables
 display_size = [1920, 1080]
-img_path = 'C:\\Users\\CogInf\\Desktop\\cyan.png'
+img_path = "C:\\Users\\CogInf\\Desktop\\cyan.png"
 
 # Output file
 out = []
@@ -46,25 +50,27 @@ win, message1 = features.introduction(display_size)
 
 # For Test
 test = cv2.imread(img_path)
-cv2.imwrite(img_path[:-4] + '_copy' + img_path[-4:], test)
+cv2.imwrite(img_path[:-4] + "_copy" + img_path[-4:], test)
 
 
 # Start eye tracking
-my_eyetracker.subscribe_to(tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True)
+my_eyetracker.subscribe_to(
+    tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True
+)
 
 test_image = visual.ImageStim(
     win,
     image=img_path,
     pos=[0, 0],
-    )
+)
 test_image.draw()
 
 circle = visual.Circle(
     win,
-    units='norm',  # [(-1.0, 1.0), (-1.0, 1.0)],
-    size = (0.1 / (display_size[0] / display_size[1]), 0.1),
-    lineColor=(0, 255, 255)
-    )
+    units="norm",  # [(-1.0, 1.0), (-1.0, 1.0)],
+    size=(0.1 / (display_size[0] / display_size[1]), 0.1),
+    lineColor=(0, 255, 255),
+)
 
 win.flip(clearBuffer=True)
 
@@ -80,7 +86,7 @@ while True:
             gaze = (int(x * img_shape[1]), int(y * img_shape[0]))
 
             img_gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            img_gray = np.stack((img_gray,)*3, axis=-1)
+            img_gray = np.stack((img_gray,) * 3, axis=-1)
 
             # Make mask
             mask = np.zeros(img_shape, dtype="uint8")
@@ -104,7 +110,7 @@ while True:
             count += 1
 
     # Escape command
-    if 'space' in event.getKeys():
+    if "space" in event.getKeys():
         break
 
 # End eye tracking
@@ -112,7 +118,7 @@ my_eyetracker.unsubscribe_from(tr.EYETRACKER_GAZE_DATA, gaze_data_callback)
 out = pd.DataFrame(out)
 
 # Save outputs as a csv file
-path = './out.csv'
+path = "./out.csv"
 features.save_csv(out, path)
 
 print(out.tail())

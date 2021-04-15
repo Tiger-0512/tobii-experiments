@@ -9,7 +9,11 @@ def show_eyetracker(eyetracker):
     print("Serial number: " + eyetracker.serial_number)
 
     display_area = eyetracker.get_display_area()
-    print("Got display area from tracker with serial number {0}:".format(eyetracker.serial_number))
+    print(
+        "Got display area from tracker with serial number {0}:".format(
+            eyetracker.serial_number
+        )
+    )
     print("Bottom Left: {0}".format(display_area.bottom_left))
     print("Bottom Right: {0}".format(display_area.bottom_right))
     print("Height: {0}".format(display_area.height))
@@ -19,8 +23,10 @@ def show_eyetracker(eyetracker):
 
 
 def introduction(display_size):
-    win = visual.Window(display_size, allowGUI=True, monitor='testMonitor', units='norm')
-    message = visual.TextStim(win, pos=[0, 0], text='Hit a Key when ready', height=0.05)
+    win = visual.Window(
+        display_size, allowGUI=True, monitor="testMonitor", units="norm"
+    )
+    message = visual.TextStim(win, pos=[0, 0], text="Hit a Key when ready", height=0.05)
     message.draw()
     win.flip()
 

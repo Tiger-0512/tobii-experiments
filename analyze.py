@@ -5,8 +5,9 @@ from matplotlib import pyplot as plt
 
 def str_to_float(array):
     array = array[1:-1]
-    array = list(map(float, array.split(',')))
+    array = list(map(float, array.split(",")))
     return array[0], array[1]
+
 
 def divide_to_axis(df):
     # initialization
@@ -15,8 +16,8 @@ def divide_to_axis(df):
     right_x = np.empty(0)
     right_y = np.empty(0)
 
-    left = df_csv['0'].to_numpy()
-    right = df_csv['1'].to_numpy()
+    left = df_csv["0"].to_numpy()
+    right = df_csv["1"].to_numpy()
 
     for i in range(len(left)):
         # left eye
@@ -32,7 +33,7 @@ def divide_to_axis(df):
     return left_x, left_y, right_x, right_y
 
 
-df_csv = pd.read_csv('out.csv')
+df_csv = pd.read_csv("out.csv")
 l_x, l_y, r_x, r_y = divide_to_axis(df_csv)
 
 

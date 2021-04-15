@@ -28,7 +28,7 @@ my_eyetracker = found_eyetrackers[0]
 
 # Variables
 display_size = [1920, 1080]
-img_original_path = './images/ooura.jpg'
+img_original_path = './images/oura.jpg'
 img_resized_path = './images/oura_resized.jpg'
 
 # Read Images
@@ -127,6 +127,7 @@ features.save_csv(out, path)
 print(out.tail())
 print(count)
 print(tl, br, gaze)
+print(img_size)
 
 core.quit()
 win.close()

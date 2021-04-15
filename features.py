@@ -19,8 +19,8 @@ def show_eyetracker(eyetracker):
 
 
 def introduction(display_size):
-    win = visual.Window(display_size, allowGUI=True, monitor='testMonitor', units='deg')
-    message = visual.TextStim(win, pos=[0, 1], text='Hit a Key when ready')
+    win = visual.Window(display_size, allowGUI=True, monitor='testMonitor', units='norm')
+    message = visual.TextStim(win, pos=[0, 0], text='Hit a Key when ready', height=0.05)
     message.draw()
     win.flip()
 
@@ -38,6 +38,18 @@ def synthesize_images_with_mask(background_img, objective_img, mask):
     synthesized_img = cv2.bitwise_or(masked_obj, masked_bg)
 
     return synthesized_img
+
+
+def change_message(pos_pix, msg, shown_msg):
+    if (
+        shown_msg.pos[0] - 100 < pos_pix[0] < shown_msg.pos[0] + 100
+        and shown_msg.pos[1] - 100 < pos_pix[1] < shown_msg.pos[1] + 100
+    ):
+        shown_msg.text = msg
+        shown_msg.height = 64
+    else:
+        shown_msg.text = msg[0]
+        shown_msg.height = 192
 
 
 def save_csv(df, path):

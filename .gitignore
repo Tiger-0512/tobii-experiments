@@ -2,3 +2,4 @@ out.csv
 __pycache__
 images
 opengl_test.py
+gaze_contingent_display_test.py

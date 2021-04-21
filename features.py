@@ -1,4 +1,5 @@
-import cv2
+import cv2, math
+import sympy as sp
 from psychopy import visual, event
 
 
@@ -56,6 +57,116 @@ def change_message(pos_pix, msg, shown_msg):
     else:
         shown_msg.text = msg[0]
         shown_msg.height = 192
+
+
+# arguments: A(0, 0), B(x, y), d_ca(=AB=CA), d_bc(=BC)
+# return: C(x, y)
+def calculate_coordinate(B, d_ca, d_bc, cur_deg, deg):
+    alpha = math.atan2(B[1], B[0])
+
+    x = (2 * (d_ca ** 2) - d_bc ** 2) / (2 * d_ca)
+    s = (2 * d_ca + d_bc) / 2
+    y = 2 * math.sqrt(s * (s - d_ca) * (s - d_ca) * (s - d_bc)) / d_ca
+    C = [
+        (
+            int(x * math.cos(alpha) - y * math.sin(alpha)),
+            int(x * math.sin(alpha) + y * math.cos(alpha)),
+        ),
+        (
+            int(x * math.cos(alpha) + y * math.sin(alpha)),
+            int(x * math.sin(alpha) - y * math.cos(alpha)),
+        ),
+    ]
+
+    if 0 <= cur_deg < 90 or cur_deg == 360:
+        if C[0][0] > 0 and C[0][1] >= 0:
+            C = C[0]
+        else:
+            C = C[1]
+    elif 90 <= cur_deg < 180:
+        if C[0][0] <= 0 and C[0][1] > 0:
+            C = C[0]
+        else:
+            C = C[1]
+    elif 180 <= cur_deg < 270:
+        if C[0][0] < 0 and C[0][1] <= 0:
+            C = C[0]
+        else:
+            C = C[1]
+    else:
+        if C[0][0] >= 0 and C[0][1] < 0:
+            C = C[0]
+        else:
+            C = C[1]
+
+    return C
+
+
+def create_peripheral_stim(win, stim_list, display_size):
+    # Calculate stimilus coordinates
+    # ref: https://memo.sugyan.com/entry/20090408/1239148436
+    deg = 360 / len(stim_list)
+    d_ab = display_size[1] * 0.7 / 2
+    d_bc = math.sqrt(2 * (d_ab ** 2) * (1 - math.cos(math.radians(deg))))
+    coordinates = []
+
+    B = [d_ab, 0]
+    cur_deg = deg
+    for s in stim_list:
+        C = calculate_coordinate(B, d_ab, d_bc, cur_deg, deg)
+        coordinates.append(C)
+        B = C
+        cur_deg += deg
+
+        stim = visual.TextStim(
+            win,
+            text="{}".format(s),
+            units="pix",
+            pos=C,
+            height=32,
+        )
+
+        # stim_path = './images/dummy/{}.png'.format(i + 1)
+        # stim = visual.ImageStim(
+        #     win,
+        #     image=stim_path,
+        #     units="pix",
+        #     pos=C,
+        #     # height = 32,
+        # )
+
+        stim.draw()
+    return coordinates
+
+
+def judge_eyes_fixing(
+    prev_gaze, cur_gaze, prev_time, cur_time, pix_thr, time_thr, coordinates, back_pos
+):
+    if (
+        prev_gaze[0] - pix_thr < cur_gaze[0] < prev_gaze[0] + pix_thr
+        and prev_gaze[1] - pix_thr < cur_gaze[1] < prev_gaze[1] + pix_thr
+    ):
+        # print("phase 1 clear")
+        if cur_time - prev_time > time_thr:
+            # print("phase 2 clear")
+            for i, c in enumerate(coordinates):
+                print(coordinates[i], i, c)
+                if (
+                    c[0] - pix_thr < cur_gaze[0] < c[0] + pix_thr
+                    and c[1] - pix_thr < cur_gaze[1] < c[1] + pix_thr
+                ):
+                    return i  # Change stimilus
+            if (
+                back_pos[0] - pix_thr < cur_gaze[0] < back_pos[0] + pix_thr
+                and back_pos[1] - pix_thr < cur_gaze[1] < back_pos[1] + pix_thr
+            ):
+                return -3  # Change stimilus and back to home
+
+            return -1
+        else:
+            return -1  # Hold states
+    else:
+        return -2  # Restart fixing
 
 
 def save_csv(df, path):

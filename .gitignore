@@ -1,5 +1,8 @@
-out.csv
 __pycache__
+out.csv
 images
+imagenet_tree.json
+
+test.py
 opengl_test.py
 gaze_contingent_display_test.py

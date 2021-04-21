@@ -1,12 +1,7 @@
-import cv2
-from PIL import Image, ImageDraw
 import tobii_research as tr
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
-from psychopy import core, visual, gui, data, event
-from psychopy.core import getTime, wait
-from psychopy.tools.monitorunittools import posToPix
+from psychopy import core, visual, event
 
 import features
 
@@ -151,9 +146,5 @@ features.save_csv(out, path)
 print(out.tail())
 print(count)
 
-print(msg_center.boundingBox)  # return pixel
-print(msg_right.boundingBox)  # return pixel
-print(msg_left.boundingBox)  # return pixel
-
-core.quit()
 win.close()
+core.quit()

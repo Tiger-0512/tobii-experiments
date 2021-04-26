@@ -1,10 +1,12 @@
-import cv2, json, sys
-from PIL import Image, ImageDraw
+import cv2
+from PIL import Image, ImageDraw, ImageFilter
 import tobii_research as tr
 import pandas as pd
 import numpy as np
-from psychopy import core, visual, event
+from matplotlib import pyplot as plt
+from psychopy import core, visual, gui, data, event
 from psychopy.core import getTime, wait
+from psychopy.tools.monitorunittools import posToPix
 
 import features
 
@@ -30,12 +32,18 @@ my_eyetracker = found_eyetrackers[0]
 
 # Variables
 display_size = [1920, 1080]
+img_original_path = (
+    "C:\\Users\\Coginf\\repos\\tobii_sdk\\imagenet_tree_renew\\128_128\\128_128.png"
+)
+img_resized_path = (
+    "C:\\Users\\CogInf\\repos\\tobii_sdk\\imagenet_tree_renew\\320_320\\320_320.png"
+)
 
-with open("./imagenet_tree.json") as f:
-    dic = json.load(f)
-stim_list = dic["0"]
-num = len(stim_list)
-print(num)
+# Read Images
+img_original = Image.open(img_original_path)
+img_size = img_original.size
+img_resized = Image.open(img_resized_path).resize(img_size)
+# mask_base = Image.new('L', img_size, 0)
 
 # Output file
 out = []
@@ -46,27 +54,29 @@ features.show_eyetracker(my_eyetracker)
 # Create and Show introduction
 win, message1 = features.introduction(display_size)
 
-# # Start eye tracking
+# For Test
+# cv2.imwrite(img_original_path[:-4] + '_copy' + img_original_path[-4:], img_original)
+
+
+# Start eye tracking
 my_eyetracker.subscribe_to(
     tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True
 )
 
-msg_back = visual.TextStim(
+test_image = visual.ImageStim(
     win,
-    text="back",
-    units="pix",
-    pos=[-0.7 * display_size[0] / 2, 0.7 * display_size[1] / 2],
-    height=64,
+    image=img_original,
+    pos=[0, 0],
 )
+test_image.draw()
 
 circle = visual.Circle(
     win,
-    units="pix",  # [(-1.0, 1.0), (-1.0, 1.0)],
-    size=(50, 50),
+    units="norm",  # [(-1.0, 1.0), (-1.0, 1.0)],
+    size=(0.1 / (display_size[0] / display_size[1]), 0.1),
     lineColor=(0, 255, 255),
 )
 
-coordinates = features.create_peripheral_stim(win, stim_list, display_size)
 win.flip(clearBuffer=True)
 
 count = 0
@@ -76,63 +86,41 @@ y_before = 0
 while len(out) == 0:
     continue
 
-prev_time = getTime()
-
 while True:
-    cur_time = getTime()
     x, y = out[-1][0]
 
     if np.isnan(x) or np.isnan(y):
         x = x_before
         y = y_before
 
-    # Modify x, y that the origin comes center of the display
+    # Trace subject's eye
+    img = img_original
+    gaze = (int(x * img_size[0]), int(y * img_size[1]))
+
+    tl, br = (gaze[0] - 300, gaze[1] - 300), (gaze[0] + 300, gaze[1] + 300)
+
+    # Create mask
+    mask_base = Image.new("L", img_size, 0)
+    mask = ImageDraw.Draw(mask_base)
+    mask.ellipse((tl, br), fill=255)
+    mask_blur = mask_base.filter(ImageFilter.GaussianBlur(10))
+
+    # Create modified image
+    test = Image.composite(img_original, img_resized, mask_blur)
+    test_image.image = test
+
+    # Modify x, y that the origin becomes center of the display
     y = -y
     x, y = 2 * (x - 0.5), 2 * (y + 0.5)
-    x_pix = x * display_size[0] / 2
-    y_pix = y * display_size[1] / 2
+    circle.pos = (x, y)
 
-    judge = features.judge_eyes_fixing(
-        [x_before, y_before],
-        [x_pix, y_pix],
-        prev_time,
-        cur_time,
-        300,
-        2,
-        coordinates,
-        msg_back.pos,
-    )
-
-    if judge == -1:
-        pass
-    elif judge == -2:
-        prev_time = cur_time
-    elif judge == -3:  # When gaze is fixed "back button"
-        stim_list = dic["0"]
-        prev_time = cur_time
-    else:  # judge == 0, 1, 2, ...
-        try:
-            print(judge)
-            print("{}".format(stim_list[judge]))
-            stim_list = dic["{}".format(stim_list[judge])]
-            prev_time = cur_time
-            print("True")
-        except:
-            print("stim_list is not exist, check json file")
-            print("{}".format(stim_list[judge]))
-            sys.exit(1)
-
-    circle.pos = (x_pix, y_pix)
+    test_image.draw()
     circle.draw()
-
-    coordinates = features.create_peripheral_stim(win, stim_list, display_size)
-    msg_back.draw()
-
-    win.flip()
+    win.flip(clearBuffer=True)
     count += 1
 
-    x_before = x_pix
-    y_before = y_pix
+    x_before = x
+    y_before = y
 
     # Escape command
     if "space" in event.getKeys():
@@ -148,15 +136,8 @@ features.save_csv(out, path)
 
 print(out.tail())
 print(count)
-
-# print(msg_center.boundingBox)  # return pixel
-# print(msg_right.boundingBox)  # return pixel
-# print(msg_left.boundingBox)  # return pixel
-
-win.close()
-
-print(getTime())
-wait(2)
-print(getTime())
+print(tl, br, gaze)
+print(img_size)
 
 core.quit()
+win.close()

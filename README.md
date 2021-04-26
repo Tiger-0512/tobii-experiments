@@ -9,7 +9,10 @@
 - Trace your eyes(trace_eyes.py).
 - Indicate where you are looking on the backgroud image(show_where_you_look.py).
 - Turn to the gray scale from RGB where you are looking on the background image(gaze_to_gray.py).
-- Make Gaze-Contingent-Display(GCD) with synthesizing high/low resolution images(gaze_contingent_display.py).
+- Create Gaze-Contingent-Display(GCD) with synthesizing high/low resolution images(gcd_for_image_blur.py).
+- Create Gaze-Contingent-Display(GCD) for text stimilus(gcd_for_text.py).
+- Create Gaze-Contingent-Display(GCD) for tree structure of text(gcd_for_tree.py).
+- Create Gaze-Contingent-Display(GCD) for ImageNet datasets to search one class from several classes in the display(gcd_for_inet.py).
 
 ## Usage
 ### 1. Clone this reopsitory

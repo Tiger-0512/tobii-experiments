@@ -100,9 +100,9 @@ while True:
             test_image.image = img_path
 
             # Modify x, y that the origin becomes center of the display
-            y = -y
-            x, y = 2 * (x - 0.5), 2 * (y + 0.5)
-            circle.pos = (x, y)
+            y_circle = -y
+            x_circle, y_circle = 2 * (x - 0.5), 2 * (y_circle + 0.5)
+            circle.pos = (x_circle, y_circle)
 
             test_image.draw()
             circle.draw()

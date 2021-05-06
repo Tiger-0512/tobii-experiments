@@ -154,9 +154,4 @@ print(count)
 # print(msg_left.boundingBox)  # return pixel
 
 win.close()
-
-print(getTime())
-wait(2)
-print(getTime())
-
 core.quit()

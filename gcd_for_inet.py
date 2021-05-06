@@ -6,7 +6,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from psychopy import core, visual, gui, data, event
 from psychopy.core import getTime, wait
-from psychopy.tools.monitorunittools import posToPix
 
 import features
 
@@ -33,17 +32,20 @@ my_eyetracker = found_eyetrackers[0]
 # Variables
 display_size = [1920, 1080]
 img_original_path = (
-    "C:\\Users\\Coginf\\repos\\tobii_sdk\\imagenet_tree_renew\\128_128\\128_128.png"
+    "C:\\Users\\Coginf\\repos\\tobii_sdk\\imagenet_tree_renew\\128_128\\128_128_new.png"
 )
-img_resized_path = (
-    "C:\\Users\\CogInf\\repos\\tobii_sdk\\imagenet_tree_renew\\320_320\\320_320.png"
+img_resized_213_path = (
+    "C:\\Users\\CogInf\\repos\\tobii_sdk\\imagenet_tree_renew\\213_213\\213_213_new.png"
+)
+img_resized_640_path = (
+    "C:\\Users\\CogInf\\repos\\tobii_sdk\\imagenet_tree_renew\\640_640\\640_640.png"
 )
 
 # Read Images
 img_original = Image.open(img_original_path)
 img_size = img_original.size
-img_resized = Image.open(img_resized_path).resize(img_size)
-# mask_base = Image.new('L', img_size, 0)
+img_resized_213 = Image.open(img_resized_213_path).resize(img_size)
+img_resized_640 = Image.open(img_resized_640_path).resize(img_size)
 
 # Output file
 out = []
@@ -53,9 +55,6 @@ features.show_eyetracker(my_eyetracker)
 
 # Create and Show introduction
 win, message1 = features.introduction(display_size)
-
-# For Test
-# cv2.imwrite(img_original_path[:-4] + '_copy' + img_original_path[-4:], img_original)
 
 
 # Start eye tracking
@@ -70,12 +69,12 @@ test_image = visual.ImageStim(
 )
 test_image.draw()
 
-circle = visual.Circle(
-    win,
-    units="norm",  # [(-1.0, 1.0), (-1.0, 1.0)],
-    size=(0.1 / (display_size[0] / display_size[1]), 0.1),
-    lineColor=(0, 255, 255),
-)
+# circle = visual.Circle(
+#     win,
+#     units="norm",  # [(-1.0, 1.0), (-1.0, 1.0)],
+#     size=(0.1 / (display_size[0] / display_size[1]), 0.1),
+#     lineColor=(0, 255, 255),
+# )
 
 win.flip(clearBuffer=True)
 
@@ -97,25 +96,30 @@ while True:
     img = img_original
     gaze = (int(x * img_size[0]), int(y * img_size[1]))
 
-    tl, br = (gaze[0] - 300, gaze[1] - 300), (gaze[0] + 300, gaze[1] + 300)
-
-    # Create mask
+    # Create inner mask
+    tl_inner, br_inner = (gaze[0] - 200, gaze[1] - 200), (gaze[0] + 200, gaze[1] + 200)
     mask_base = Image.new("L", img_size, 0)
     mask = ImageDraw.Draw(mask_base)
-    mask.ellipse((tl, br), fill=255)
+    mask.ellipse((tl_inner, br_inner), fill=255)
     mask_blur = mask_base.filter(ImageFilter.GaussianBlur(10))
-
     # Create modified image
-    test = Image.composite(img_original, img_resized, mask_blur)
+    test = Image.composite(img_original, img_resized_213, mask_blur)
+
+    # Create outer mask
+    tl_outer, br_outer = (gaze[0] - 500, gaze[1] - 500), (gaze[0] + 500, gaze[1] + 500)
+    mask.ellipse((tl_outer, br_outer), fill=255)
+    mask_blur = mask_base.filter(ImageFilter.GaussianBlur(10))
+    # Create modified image
+    test = Image.composite(test, img_resized_640, mask_blur)
     test_image.image = test
 
     # Modify x, y that the origin becomes center of the display
-    y = -y
-    x, y = 2 * (x - 0.5), 2 * (y + 0.5)
-    circle.pos = (x, y)
+    # y_circle = -y
+    # x_circle, y_circle = 2 * (x - 0.5), 2 * (y_circle + 0.5)
+    # circle.pos = (x_circle, y_circle)
 
     test_image.draw()
-    circle.draw()
+    # circle.draw()
     win.flip(clearBuffer=True)
     count += 1
 
@@ -136,8 +140,6 @@ features.save_csv(out, path)
 
 print(out.tail())
 print(count)
-print(tl, br, gaze)
-print(img_size)
 
-core.quit()
 win.close()
+core.quit()

@@ -4,6 +4,7 @@ images
 imagenet_tree.json
 my_imgnet.json
 imagenet.drawio
+condaenv.*.requirements.txt
 
 test.py
 opengl_test.py

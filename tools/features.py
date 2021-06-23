@@ -1,6 +1,9 @@
 import cv2, math
-import sympy as sp
 from psychopy import visual, event
+
+
+def calc_VA(distance, size):
+    return round(360 / math.pi * math.atan2(size, 2 * distance), 1)
 
 
 def show_eyetracker(eyetracker):
@@ -23,7 +26,7 @@ def show_eyetracker(eyetracker):
     print("Width: {0}".format(display_area.width))
 
 
-def introduction(display_size):
+def introduction(display_size, units="norm"):
     win = visual.Window(
         display_size, allowGUI=True, monitor="testMonitor", units="norm"
     )
@@ -61,7 +64,7 @@ def change_message(pos_pix, msg, shown_msg):
 
 # arguments: A(0, 0), B(x, y), d_ca(=AB=CA), d_bc(=BC)
 # return: C(x, y)
-def calculate_coordinate(B, d_ca, d_bc, cur_deg, deg):
+def calc_coordinate(B, d_ca, d_bc, cur_deg, deg):
     alpha = math.atan2(B[1], B[0])
 
     x = (2 * (d_ca ** 2) - d_bc ** 2) / (2 * d_ca)
@@ -113,7 +116,7 @@ def create_peripheral_stim(win, stim_list, display_size):
     B = [d_ab, 0]
     cur_deg = deg
     for s in stim_list:
-        C = calculate_coordinate(B, d_ab, d_bc, cur_deg, deg)
+        C = calc_coordinate(B, d_ab, d_bc, cur_deg, deg)
         coordinates.append(C)
         B = C
         cur_deg += deg
@@ -178,6 +181,7 @@ def search_domain(x, y, threshold):
             ):
                 return (i, j)
     return (-1, -1)
+
 
 def list_to_domain(x, y, X):
     for i in range(y):

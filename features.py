@@ -169,5 +169,29 @@ def judge_eyes_fixing(
         return -2  # Restart fixing
 
 
+def search_domain(x, y, threshold):
+    for i in range(len(threshold[0]) - 1):
+        for j in range(len(threshold[1]) - 1):
+            if (
+                threshold[0][i] <= x <= threshold[0][i + 1]
+                and threshold[1][j] >= y >= threshold[1][j + 1]
+            ):
+                return (i, j)
+    return (-1, -1)
+
+def list_to_domain(x, y, X):
+    for i in range(y):
+        if x == i:
+            return x + y * X
+
+
+def domain_to_corner(domain, row, col, display_size):
+    len_hor = int(display_size[0] / row)
+    len_var = int(display_size[1] / col)
+    tl = (len_hor * domain[0], len_var * domain[1])
+    br = (len_hor * (domain[0] + 1), len_var * (domain[1] + 1))
+    return tl, br
+
+
 def save_csv(df, path):
     df.to_csv(path)

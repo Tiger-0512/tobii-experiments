@@ -1,11 +1,11 @@
-import cv2
 from PIL import Image, ImageDraw, ImageFilter
 import tobii_research as tr
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
 from psychopy import core, visual, gui, data, event
-from psychopy.core import getTime, wait
+
+# from psychopy.core import getTime, wait
 
 import features
 
@@ -32,20 +32,16 @@ my_eyetracker = found_eyetrackers[0]
 # Variables
 display_size = [1920, 1080]
 img_original_path = (
-    "C:\\Users\\Coginf\\repos\\tobii_sdk\\imagenet_tree_renew\\128_128\\128_128_new.png"
-)
-img_resized_213_path = (
-    "C:\\Users\\CogInf\\repos\\tobii_sdk\\imagenet_tree_renew\\213_213\\213_213_new.png"
+    "C:\\Users\\Coginf\\repos\\tobii_sdk\\imagenet_tree_renew\\128_128\\128_128.png"
 )
 img_resized_640_path = (
     "C:\\Users\\CogInf\\repos\\tobii_sdk\\imagenet_tree_renew\\640_640\\640_640.png"
 )
 
 # Read Images
-img_original = Image.open(img_original_path)
+img_original = Image.open(img_original_path).resize(display_size)
 img_size = img_original.size
-img_resized_213 = Image.open(img_resized_213_path).resize(img_size)
-img_resized_640 = Image.open(img_resized_640_path).resize(img_size)
+img_resized_640 = Image.open(img_resized_640_path).resize(display_size)
 
 # Output file
 out = []
@@ -93,24 +89,23 @@ while True:
         y = y_before
 
     # Trace subject's eye
-    img = img_original
     gaze = (int(x * img_size[0]), int(y * img_size[1]))
 
-    # Create inner mask
+    # Create mask
     tl_inner, br_inner = (gaze[0] - 200, gaze[1] - 200), (gaze[0] + 200, gaze[1] + 200)
     mask_base = Image.new("L", img_size, 0)
     mask = ImageDraw.Draw(mask_base)
     mask.ellipse((tl_inner, br_inner), fill=255)
     mask_blur = mask_base.filter(ImageFilter.GaussianBlur(10))
     # Create modified image
-    test = Image.composite(img_original, img_resized_213, mask_blur)
+    test = Image.composite(img_original, img_resized_640, mask_blur)
 
     # Create outer mask
-    tl_outer, br_outer = (gaze[0] - 500, gaze[1] - 500), (gaze[0] + 500, gaze[1] + 500)
-    mask.ellipse((tl_outer, br_outer), fill=255)
-    mask_blur = mask_base.filter(ImageFilter.GaussianBlur(10))
-    # Create modified image
-    test = Image.composite(test, img_resized_640, mask_blur)
+    # tl_outer, br_outer = (gaze[0] - 500, gaze[1] - 500), (gaze[0] + 500, gaze[1] + 500)
+    # mask.ellipse((tl_outer, br_outer), fill=255)
+    # mask_blur = mask_base.filter(ImageFilter.GaussianBlur(10))
+    # # Create modified image
+    # test = Image.composite(test, img_resized_640, mask_blur)
     test_image.image = test
 
     # Modify x, y that the origin becomes center of the display

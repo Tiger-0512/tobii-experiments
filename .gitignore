@@ -2,9 +2,9 @@ __pycache__
 out.csv
 images
 imagenet_tree.json
+my_imgnet.json
 imagenet.drawio
 
 test.py
 opengl_test.py
 gaze_contingent_display_test.py
-txt_to_json.py

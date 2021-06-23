@@ -1,12 +1,10 @@
-import cv2
-from PIL import Image, ImageDraw
+import glob, textwrap, json
+from PIL import Image, ImageDraw, ImageFilter
 import tobii_research as tr
 import pandas as pd
 import numpy as np
-from matplotlib import pyplot as plt
 from psychopy import core, visual, gui, data, event
-from psychopy.core import getTime, wait
-from psychopy.tools.monitorunittools import posToPix
+# from psychopy.core import getTime, wait
 
 import features
 
@@ -30,42 +28,74 @@ def gaze_data_callback(gaze_data):
 found_eyetrackers = tr.find_all_eyetrackers()
 my_eyetracker = found_eyetrackers[0]
 
+# Show eye tracker settings
+features.show_eyetracker(my_eyetracker)
+
 # Variables
 display_size = [1920, 1080]
-img_original_path = "./images/oura.jpg"
-img_resized_path = "./images/oura_resized.jpg"
-
-# Read Images
-img_original = Image.open(img_original_path)
-img_size = img_original.size
-img_resized = Image.open(img_resized_path).resize(img_size)
-# mask_base = Image.new('L', img_size, 0)
-
+threshold = [[-1, -1 / 3, 1 / 3, 1], [1, 0, -1]]
+row, col = len(threshold[0]) - 1, len(threshold[1]) - 1
+root = {0: ["Carnivore", "n02075296"]}
+tree = {
+    "n02075296": [
+        "n02131653",
+        "n02083346",
+        "n02120997",
+        "n02441326",
+        "n02507649",
+        "n02134971",
+    ]
+}
+count = 0
+x_before = 0
+y_before = 0
+domains = {
+    0: "bear",
+    1: "canine",
+    2: "feline",
+    3: "musteline_mammal",
+    4: "procyonid",
+    5: "vivernine",
+}
 # Output file
 out = []
 
-# Show eye tracker settings
-features.show_eyetracker(my_eyetracker)
+# Import first images
+path = "C:\\Users\\CogInf\\repos\\tobii_sdk\\imagenet_tree_renew\\test"
+p_list = glob.glob("{}\*\*.JPEG".format(path))
+print(p_list)
+template = textwrap.dedent(
+    """
+    image_{INDEX}_path = p_list[i]
+    image_{INDEX} = Image.open(image_{INDEX}_path).resize(
+        [display_size[0] // row, display_size[1] // col]
+    )
+    """
+)
+for i in range(row * col):
+    items = template.format(INDEX=i + 1)
+    exec(items)
 
 # Create and Show introduction
 win, message1 = features.introduction(display_size)
 
-# For Test
-# cv2.imwrite(img_original_path[:-4] + '_copy' + img_original_path[-4:], img_original)
-
-
-# Start eye tracking
-my_eyetracker.subscribe_to(
-    tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True
+# Show first images
+tmp = [1, -1]
+template = textwrap.dedent(
+    """
+    image_{INDEX} = visual.ImageStim(
+        win,
+        image=image_{INDEX},
+        pos=[2 / row * (i % row - 1), tmp[i // row] / col],
+    )
+    image_{INDEX}.draw()
+    """
 )
+for i in range(row * col):
+    items = template.format(INDEX=i + 1)
+    exec(items)
 
-test_image = visual.ImageStim(
-    win,
-    image=img_original,
-    pos=[0, 0],
-)
-test_image.draw()
-
+# Trace eyes
 circle = visual.Circle(
     win,
     units="norm",  # [(-1.0, 1.0), (-1.0, 1.0)],
@@ -75,9 +105,11 @@ circle = visual.Circle(
 
 win.flip(clearBuffer=True)
 
-count = 0
-x_before = 0
-y_before = 0
+
+# Start eye tracking
+my_eyetracker.subscribe_to(
+    tr.EYETRACKER_GAZE_DATA, gaze_data_callback, as_dictionary=True
+)
 
 while len(out) == 0:
     continue
@@ -90,29 +122,15 @@ while True:
         y = y_before
 
     # Trace subject's eye
-    img = img_original
-    gaze = (int(x * img_size[0]), int(y * img_size[1]))
-
-    tl, br = (gaze[0] - 300, gaze[1] - 300), (gaze[0] + 300, gaze[1] + 300)
-
-    # Create mask
-    mask_base = Image.new("L", img_size, 0)
-    mask = ImageDraw.Draw(mask_base)
-    mask.ellipse((tl, br), fill=255)
-    # mask_base.save('./images/test.jpg')
-
-    # Create modified image
-    test = Image.composite(img_original, img_resized, mask_base)
-    test_image.image = test
+    # gaze = (int(x * img_size[0]), int(y * img_size[1]))
 
     # Modify x, y that the origin becomes center of the display
     y_circle = -y
     x_circle, y_circle = 2 * (x - 0.5), 2 * (y_circle + 0.5)
     circle.pos = (x_circle, y_circle)
 
-    test_image.draw()
-    circle.draw()
-    win.flip(clearBuffer=True)
+    # circle.draw()
+    # win.flip(clearBuffer=True)
     count += 1
 
     x_before = x
@@ -132,8 +150,6 @@ features.save_csv(out, path)
 
 print(out.tail())
 print(count)
-print(tl, br, gaze)
-print(img_size)
 
 win.close()
 core.quit()

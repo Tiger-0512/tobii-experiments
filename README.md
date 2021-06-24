@@ -35,8 +35,8 @@ $ psychopy
 ```
 
 ### 4. Save Eye Tracker Calibration Data
-Use [Tobii Pro Eye Tracker Manager](https://www.tobiipro.com/product-listing/eye-tracker-manager/) to calibrate.<br>
-Once you calibrate your eye, the parameter is saved in the eye tracker internally.<br>
+You can use [Tobii Pro Eye Tracker Manager](https://www.tobiipro.com/product-listing/eye-tracker-manager/) for calibration.<br>
+Once you calibrate subject's eyes, the parameter is saved in the eye tracker internally.<br>
 
 ### 5. Execute the experiments
 In PsychoPy editor, select the experiment in this repo and the run it.

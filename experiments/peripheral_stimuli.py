@@ -8,9 +8,11 @@ import numpy as np
 from numpy import matlib, inf
 from builtins import range
 from random import random
-import math
+from PIL import Image
+import math, os, textwrap
 
-import features
+from tools import features
+
 
 try:  # try to get a previous parameters file
     expInfo = fromFile("lastParams.pickle")
@@ -25,12 +27,34 @@ if dlg.OK:
 else:
     core.quit()  # the user hit cancel so exit
 
+stim_classs = [
+    "cat",
+    "dog",
+    "cow",
+    "tiger",
+    "rabbit",
+    "horse",
+    "sheep",
+    "monkey",
+    "lion",
+    "bear",
+    "fox",
+    "raccoon",
+    "squirrel",
+    "elephant",
+    "dear",
+    "boar",
+    "kangaroo",
+    "koala",
+    "rhino",
+    "pig",
+]
 # making Stimlist
 stim_list = []
 for ori in range(0, 360, 90):  # 4 directions
     for pos in [1, 2]:  # 2 positions
         for size in [1, 2, 3]:  # 3 stimuli size
-            for state in [0, 1]:
+            for state in [1, 2]:
                 # append a python 'dictionary' to the list
                 stim_list.append({"ori": ori, "pos": pos, "size": size, "state": state})
 
@@ -135,115 +159,28 @@ MouseSpot = visual.GratingStim(
 # presenting Concentric circles and lines for control panel
 ConC = np.array([-0.3, -0.1]) * display_size[1]
 ConS = np.array([6, 5, 4, 3, 2, 1]) * 1.4 * an2px  # 8.4, 7,5.6,4.2,2.8,1.4 VA
-polygon6 = visual.Polygon(
-    win=win,
-    name="polygon",
-    edges=1000,
-    size=(ConS[0], ConS[0]),
-    ori=0.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="white",
-)
-polygon5 = visual.Polygon(
-    win=win,
-    name="polygon",
-    edges=1000,
-    size=(ConS[1], ConS[1]),
-    ori=0.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="white",
-)
-polygon4 = visual.Polygon(
-    win=win,
-    name="polygon",
-    edges=1000,
-    size=(ConS[2], ConS[2]),
-    ori=0.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="white",
-)
-polygon3 = visual.Polygon(
-    win=win,
-    name="polygon",
-    edges=1000,
-    size=(ConS[3], ConS[3]),
-    ori=0.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="white",
-)
-polygon2 = visual.Polygon(
-    win=win,
-    name="polygon",
-    edges=1000,
-    size=(ConS[4], ConS[4]),
-    ori=0.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="white",
-)
-polygon1 = visual.Polygon(
-    win=win,
-    name="polygon",
-    edges=1000,
-    size=(ConS[5], ConS[5]),
-    ori=0.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="white",
-)
 
-line1 = visual.Line(
-    win=win,
-    start=(-(ConS[0], ConS[0])[0] / 2.0, 0),
-    end=(+(ConS[0], ConS[0])[0] / 2.0, 0),
-    ori=0.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="black",
+# Place dummy images
+img_name = [
+    "removed_n02107908_9.png",
+    "removed_n02107908_24.png",
+    "removed_n02107908_47.png",
+    "removed_n02107908_80.png",
+    "removed_n02107908_91.png",
+    "removed_n02107908_94.png",
+    "removed_n02107908_180.png",
+    "removed_n02107908_298.png",
+]
+template = textwrap.dedent(
+    """
+    img_{INDEX} = visual.ImageStim(
+        win,
+        image=Image.open("{CWD}/data/removed/{NAME}"),
+    )
+    """
 )
-line2 = visual.Line(
-    win=win,
-    start=(-(ConS[0], ConS[0])[0] / 2.0, 0),
-    end=(+(ConS[0], ConS[0])[0] / 2.0, 0),
-    ori=45.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="black",
-)
-line3 = visual.Line(
-    win=win,
-    start=(-(ConS[0], ConS[0])[0] / 2.0, 0),
-    end=(+(ConS[0], ConS[0])[0] / 2.0, 0),
-    ori=90.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="black",
-)
-line4 = visual.Line(
-    win=win,
-    start=(-(ConS[0], ConS[0])[0] / 2.0, 0),
-    end=(+(ConS[0], ConS[0])[0] / 2.0, 0),
-    ori=135.0,
-    pos=(ConC[0], ConC[1]),
-    lineWidth=1.0,
-    lineColor="black",
-    fillColor="black",
-)
-polyrange = [polygon6, polygon5, polygon4, polygon3, polygon2, polygon1]
-linerange = [line1, line2, line3, line4]
+for i in range(9):
+    items = template.format(INDEX=i + 1, CWD=os.getcwd(), NAME=img_name[i])
 
 
 """ Initialize dot stimuli  %we used visual angel as units and assume looking from 57cm, so 1cm =1 visual angle
@@ -315,7 +252,7 @@ win.flip()  # to show our newly drawn 'stimuli'
 # pause until there's a keypress
 event.waitKeys()
 
-nDone = 0
+count = 0
 for thisTrial in trials:  # handler can act like a for loop
     # define motion direction ans speed
     trialClock = core.Clock()
@@ -451,9 +388,9 @@ for thisTrial in trials:  # handler can act like a for loop
         else:
             res = "Wrong"
             col = (1, 0, 0)
-    nDone += 1
+    count += 1
     Feedback1.text = "Trial%i had direction %.3f with speed %.3f deg/sec" % (
-        nDone,
+        count,
         dotPatch.dir,
         dotPatch.speed,
     )

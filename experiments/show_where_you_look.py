@@ -5,7 +5,7 @@ from psychopy import core, visual, gui, data, event
 from psychopy.core import getTime, wait
 from psychopy.tools.monitorunittools import posToPix
 
-import features
+from tools import features
 
 
 def gaze_data_callback(gaze_data):

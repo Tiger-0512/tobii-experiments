@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from psychopy import core, visual, event
 
-import features
+from tools import features
 
 
 def gaze_data_callback(gaze_data):

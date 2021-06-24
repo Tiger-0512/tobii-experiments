@@ -5,14 +5,14 @@
 - Psychopy 3.0
 
 ## Features of the Experiments
-- Switch the image whether you gaze left side or right side of the screen(eyes_move_with_you.py).
-- Trace your eyes(trace_eyes.py).
-- Indicate where you are looking on the backgroud image(show_where_you_look.py).
-- Turn to the gray scale from RGB where you are looking on the background image(gaze_to_gray.py).
-- Create Gaze-Contingent-Display(GCD) with synthesizing high/low resolution images(gcd_for_image_blur.py).
-- Create Gaze-Contingent-Display(GCD) for text stimilus(gcd_for_text.py).
-- Create Gaze-Contingent-Display(GCD) for tree structure of text(gcd_for_tree.py).
-- Create Gaze-Contingent-Display(GCD) for ImageNet datasets to search one class from several classes in the display(gcd_for_inet.py).
+- Switch the image whether you gaze left side or right side of the screen - [eyes_move_with_you.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/eyes_move_with_you.py)
+- Trace your eyes - [trace_eyes.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/trace_eyes.py)
+- Indicate where you are looking on the backgroud image - [show_where_you_look.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/show_where_you_look.py)
+- Turn to the gray scale from RGB where you are looking on the background image - [gaze_to_gray.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/gaze_to_gray.py)
+- Create Gaze-Contingent-Display(GCD) with synthesizing high/low resolution images - [gcd_for_image_blur.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/gcd_for_image_blur.py)
+- Create GCD for text stimilus - [gcd_for_text.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/gcd_for_text.py)
+- Create GCD for tree structure of text - [gcd_for_tree.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/gcd_for_tree.py)
+- Create GCD for ImageNet datasets to search one class from several classes in the display - [gcd_for_inet_ciecle.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/gcd_for_inet_circle.py), [gcd_for_inet_square.py](https://github.com/Tiger-0512/tobii-experiments/blob/main/experiments/gcd_for_inet_square.py)
 
 ## Usage
 ### 1. Clone this reopsitory

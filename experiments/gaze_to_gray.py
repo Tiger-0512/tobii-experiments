@@ -4,7 +4,7 @@
 #####################################################
 
 
-import cv2
+import cv2, sys
 import tobii_research as tr
 import pandas as pd
 import numpy as np
@@ -13,6 +13,7 @@ from psychopy import core, visual, gui, data, event
 from psychopy.core import getTime, wait
 from psychopy.tools.monitorunittools import posToPix
 
+sys.path.append("../")
 from tools import features
 
 

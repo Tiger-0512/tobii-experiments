@@ -1,11 +1,12 @@
-import cv2, json, sys
-from PIL import Image, ImageDraw
+import sys, json, sys
 import tobii_research as tr
 import pandas as pd
 import numpy as np
+from PIL import Image, ImageDraw
 from psychopy import core, visual, event
 from psychopy.core import getTime, wait
 
+sys.path.append("../")
 from tools import features
 
 

@@ -1,12 +1,11 @@
-import glob, textwrap, json
-from PIL import Image, ImageDraw, ImageFilter
+import sys, glob, textwrap, json
 import tobii_research as tr
 import pandas as pd
 import numpy as np
+from PIL import Image, ImageDraw, ImageFilter
 from psychopy import core, visual, gui, data, event
 
-# from psychopy.core import getTime, wait
-
+sys.path.append("../")
 from tools import features
 
 

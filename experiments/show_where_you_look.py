@@ -1,3 +1,4 @@
+import sys
 import tobii_research as tr
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -5,6 +6,7 @@ from psychopy import core, visual, gui, data, event
 from psychopy.core import getTime, wait
 from psychopy.tools.monitorunittools import posToPix
 
+sys.path.append("../")
 from tools import features
 
 

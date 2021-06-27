@@ -1,9 +1,13 @@
 __pycache__
-out.csv
-images
+
 imagenet_tree.json
 my_imgnet.json
+lastParams.pickle
+out.csv
+
 imagenet.drawio
+
+images
 data
 
 test.py

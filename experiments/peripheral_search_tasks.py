@@ -1,13 +1,9 @@
-"""Measure coherence threshold of motion direction
-using Staircase procedure, dot direction: 0 (LTR)"""
-
-import math, os, sys, random, textwrap
-import numpy as np
 from __future__ import absolute_import, division, print_function
+import sys, random, glob
+import numpy as np
+from collections import defaultdict
 from psychopy import core, visual, gui, data, event
 from psychopy.tools.filetools import fromFile, toFile
-from numpy import matlib, inf
-from builtins import range
 from PIL import Image
 from screeninfo import get_monitors
 
@@ -66,40 +62,39 @@ non_target_classes = [
     "bear",
 ]
 
-# making Stimlist
-stim_list = []
-for state in [0, 1]:  # 2 state (whether the target exists or not)
-    for size in [1, 2, 3]:  # 3 stimuli size
-        for rate in [1, 2, 3]:  # 3 magnification rates to periphery
+# making condition list
+condition_list = []
+for size in [1, 2, 3]:  # 3 stimuli size
+    for rate in [1, 2, 3]:  # 3 magnification rates to periphery
+        for state in [0, 1]:  # 2 state (whether the target exists or not)
             for pos in [0, 1, 2]:  # 3 positions (0: center)
                 if pos == 0:
-                    ori = 0
+                    ori = 3
                     # append a python 'dictionary' to the list
-                    stim_list.append(
+                    condition_list.append(
                         {
-                            "state": state,
                             "size": size,
                             "rate": rate,
+                            "state": state,
                             "pos": pos,
                             "ori": ori,
                         }
                     )
                 else:
-                    for ori in range(0, 360, 90):  # 4 directions
-                        stim_list.append(
+                    for ori in [0, 1, 2, 3]:  # 4 directions
+                        condition_list.append(
                             {
-                                "state": state,
                                 "size": size,
                                 "rate": rate,
+                                "state": state,
                                 "pos": pos,
                                 "ori": ori,
                             }
                         )
 
-
 # organize them with the trial handler  repeated 10 times
 trials = data.TrialHandler(
-    stim_list,
+    condition_list,
     10,
     method="random",
     extraInfo={
@@ -108,6 +103,13 @@ trials = data.TrialHandler(
         "MotionType": expInfo["Type[1: RDK; 2: Grating]"],
     },
 )
+
+
+# Store images path in dictionary
+image_path_dict = defaultdict(list)
+image_path_dict[target_class] = glob.glob("../data/{}/*".format(target_class))
+for c in non_target_classes:
+    image_path_dict[c] = glob.glob("../data/{}/*".format(c))
 
 
 # make a text file to save data
@@ -128,10 +130,11 @@ i.e.
 VA: 32.8 degree
 1 degree: 1890 / 32.8 = 57.6 pix
 """
+
 # create window and stimuli,
 # This version I used "pixel" as units
 display_size = [get_monitors()[0].width, get_monitors()[0].height]
-print(display_size)
+# print(display_size)
 VA = features.calc_VA(57.0, 33.5)
 an2ra = 1 / VA
 an2px = round(display_size[1] / VA, 1)
@@ -142,137 +145,115 @@ win = visual.Window(
     monitor="testMonitor",
     winType="pyglet",
     units="pix",
-)  # fullscr=True
-fixation = visual.GratingStim(
-    win,
-    color=-1,
-    colorSpace="rgb",
-    pos=(0.0, 0.2 * display_size[1]),
-    tex=None,
-    mask="circle",
-    size=0.2 * an2px,
 )
-message1 = visual.TextStim(
-    win,
-    pos=[0, +0.14 * display_size[1]],
-    text="Please move the mouse to the gray point to start trials. ",
-)
-message2 = visual.TextStim(
-    win,
-    pos=[0, 0.1 * display_size[1]],
-    text="You will see a moving object for a secend",
-)
-message3 = visual.TextStim(
-    win,
-    pos=[0, 0.05 * display_size[1]],
-    text="Afterwards, please click the mouse to refer direction and speed of the moving object.",
-)
-Feedback1 = visual.TextStim(
-    win, pos=[0, +0.14 * display_size[1]], text="Physical propeties "
-)
-Feedback2 = visual.TextStim(
-    win, pos=[0, +0.1 * display_size[1]], text="Mouse response "
-)
-Feedback3 = visual.TextStim(win, pos=[0, +0.05 * display_size[1]], text="Feedback ")
-output = visual.TextBox2(
-    win,
-    text="No mouse pressed yet",
-    font="Open Sans",
-    pos=(-0.3 * display_size[1], -0.4 * display_size[1]),
-)
-output2 = visual.TextBox2(
-    win,
-    text="noise direction/speed",
-    font="Open Sans",
-    pos=(0.3 * display_size[1], -0.4 * display_size[1]),
-)
-MouseSpot = visual.GratingStim(
-    win,
-    tex="none",
-    mask="gauss",
-    pos=(0.2 * display_size[1], 0.2 * display_size[1]),
-    size=(0.7 * an2px, 0.7 * an2px),
-    color=(1.0, 1.0, 0),
-    autoLog=False,
-)  # for mouse
+
 # presenting Concentric circles and lines for control panel
 ConC = np.array([-0.3, -0.1]) * display_size[1]
 ConS = np.array([6, 5, 4, 3, 2, 1]) * 1.4 * an2px  # 8.4, 7,5.6,4.2,2.8,1.4 VA
 
-stim = []
+stim_list = []
+default_size = [an2px, an2px]
 # Place dummy images
-template = textwrap.dedent(
-    """
-    stim_{INDEX} = visual.ImageStim(
-        win,
-        image=Image.open("../data/dummy.png"),
-        pos=({POS_RATE} * display_size[1], {POS_RATE} * display_size[1]),
-        size=(0.5 * an2px, 0.5 * an2px),
-    )
-    stim_{INDEX}.draw()
-    """
-)
 for i in range(9):
     if i == 0:
-        items = template.format(INDEX=i + 1, POS_RATE=0)
+        stim_list.append(
+            features.place_dummy(
+                win, "../data/dummy.png", 0, 0, default_size, display_size
+            )
+        )
     if 0 < i <= 4:
-        items = template.format(INDEX=i + 1, POS_RATE=0.2)
+        stim_list.append(
+            features.place_dummy(
+                win, "../data/dummy.png", 0.2, i % 4 * 90, default_size, display_size
+            )
+        )
     if 4 < i < 9:
-        items = template.format(INDEX=i + 1, POS_RATE=0.5)
-    exec(items)
+        stim_list.append(
+            features.place_dummy(
+                win, "../data/dummy.png", 0.4, i % 4 * 90, default_size, display_size
+            )
+        )
+# for stim in stim_list:
+#     stim.draw()
 
-globalClock = core.Clock()
 
-# display instructions and wait
-# message1.draw()
-# message2.draw()
-# message3.draw()
-# fixation.draw()
-win.flip()  # to show our newly drawn 'stimuli'
+# Show introduction messages
+message_1 = visual.TextStim(
+    win,
+    pos=[0, 0.15 * display_size[1]],
+    text="Please answer the question whether cats exist in the stimuli.",
+)
+message_2 = visual.TextStim(
+    win,
+    pos=[0, 0.10 * display_size[1]],
+    text="Hit a Key when ready.",
+)
+message_1.draw()
+message_2.draw()
+win.flip()
 # pause until there's a keypress
 event.waitKeys()
 
+globalClock = core.Clock()
 
 count = 0
-for thisTrial in trials:  # handler can act like a for loop
+results = []
+for cur_trial in trials:  # handler can act like a for loop
     # define motion direction ans speed
     trialClock = core.Clock()
 
+    # Change non-target stimuli
     _non_target_classes = random.sample(non_target_classes, len(non_target_classes))
-    """
-    stim_
-    """
+    for i, stim in enumerate(stim_list):
+        stim.image = Image.open(random.choice(image_path_dict[_non_target_classes[i]]))
 
-    # for i in range(len(_non_target_classes)):
+    # Change target stimulus
+    for i, stim in enumerate(stim_list):
+        stim.size = list(map(lambda x: cur_trial["size"] * x, default_size))
+        if 0 < i <= 4:
+            stim.size = list(map(lambda x: cur_trial["rate"] * x, stim.size))
+        if 4 < i < 9:
+            stim.size = list(
+                map(lambda x: cur_trial["rate"] * cur_trial["rate"] * x, stim.size)
+            )
+    if cur_trial["state"] == 1:
+        stim_list[4 * cur_trial["pos"] + cur_trial["ori"] - 3].image = Image.open(
+            random.choice(image_path_dict[target_class])
+        )
+
+    # Draw stimuli
+    for stim in stim_list:
+        stim.draw()
+    win.flip()
+
+    core.wait(1)
+    features.ask_question(win, display_size)
+
+    flag = True
+    while flag == 1:
+        allKeys = event.waitKeys()
+        for key in allKeys:
+            if key in ["0", "1"]:
+                results.append(key)
+                flag = False
+            elif key in ["q", "escape"]:
+                print(results)
+                core.quit()
 
     count += 1
 
 # give some on-screen feedback
-endthank = visual.TextStim(win, pos=[0, +3], color=(1, 1, 1), text="Thank you!")
+endthank = visual.TextStim(win, pos=[0, 0.15], color=(1, 1, 1), text="Thank you!")
 endthank.draw()
-fixation.draw()
 win.flip()
 event.waitKeys()  # wait for participant to respond
 
-
-# Write summary data to a text file ...
-trials.saveAsText(
-    fileName="fileName",
-    stimOut=["ori", "sp"],
-    dataOut=["Angle_mean", "Angle_std", "velocity_raw"],
-)
-
-# Write summary data to a text file ...
-trials.saveAsText(
-    fileName="fileName",
-    stimOut=["ori", "sp"],
-    dataOut=["Angle_mean", "Angle_std", "velocity_raw"],
-)
+print(results)
 
 # trials.saveAsPickle(fileName='testData')
 
 # Wide format is useful for analysis with R or SPSS.
-df = trials.saveAsWideText("testDataWide.txt")
+# df = trials.saveAsWideText("testDataWide.txt")
 
 win.close()
 core.quit()

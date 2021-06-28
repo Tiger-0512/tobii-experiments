@@ -130,8 +130,8 @@ while True:
     x_circle, y_circle = 2 * (x - 0.5), 2 * (y_circle + 0.5)
     circle.pos = (x_circle, y_circle)
 
-    curr_domain = features.search_domain(x_circle, y_circle, threshold)
-    tl, br = features.domain_to_corner(curr_domain, row, col, display_size)
+    cur_domain = features.search_domain(x_circle, y_circle, threshold)
+    tl, br = features.domain_to_corner(cur_domain, row, col, display_size)
     mask_base = Image.new("L", img_size, 0)
     mask = ImageDraw.Draw(mask_base)
     mask.rectangle((tl, br), fill=255)
@@ -159,7 +159,7 @@ path = "./out.csv"
 features.save_csv(out, path)
 
 print(threshold[0], threshold[1])
-print(curr_domain, tl, br)
+print(cur_domain, tl, br)
 print(out.tail())
 print(count)
 

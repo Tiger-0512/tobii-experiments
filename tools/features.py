@@ -1,4 +1,5 @@
 import cv2, math
+from PIL import Image
 from psychopy import visual, event
 
 
@@ -129,15 +130,6 @@ def create_peripheral_stim(win, stim_list, display_size):
             height=32,
         )
 
-        # stim_path = './images/dummy/{}.png'.format(i + 1)
-        # stim = visual.ImageStim(
-        #     win,
-        #     image=stim_path,
-        #     units="pix",
-        #     pos=C,
-        #     # height = 32,
-        # )
-
         stim.draw()
     return coordinates
 
@@ -195,6 +187,41 @@ def domain_to_corner(domain, row, col, display_size):
     tl = (len_hor * domain[0], len_var * domain[1])
     br = (len_hor * (domain[0] + 1), len_var * (domain[1] + 1))
     return tl, br
+
+
+def place_dummy(win, image_path, pos_rate, ori, size, display_size):
+    stim = visual.ImageStim(
+        win,
+        image=Image.open(image_path),
+        pos=(
+            pos_rate * math.sin(math.radians(ori)) * display_size[1],
+            pos_rate * math.cos(math.radians(ori)) * display_size[1],
+        ),
+        size=size,
+    )
+    return stim
+
+
+def ask_question(win, display_size):
+    message_1 = visual.TextStim(
+        win,
+        pos=[0, 0.15 * display_size[1]],
+        text="Was there cats?  Please press '0' or '1'.",
+    )
+    message_2 = visual.TextStim(
+        win,
+        pos=[0, 0.10 * display_size[1]],
+        text="'0': No",
+    )
+    message_3 = visual.TextStim(
+        win,
+        pos=[0, 0.05 * display_size[1]],
+        text="'1': Yes",
+    )
+    message_1.draw()
+    message_2.draw()
+    message_3.draw()
+    win.flip()
 
 
 def save_csv(df, path):

@@ -65,7 +65,7 @@ non_target_classes = [
 # making condition list
 condition_list = []
 for size in [1, 2, 3]:  # 3 stimuli size
-    for rate in [1, 2, 3]:  # 3 magnification rates to periphery
+    for rate in [1, 1.5, 2]:  # 3 magnification rates to periphery
         for state in [0, 1]:  # 2 state (whether the target exists or not)
             for pos in [0, 1, 2]:  # 3 positions (0: center)
                 if pos == 0:
@@ -123,21 +123,33 @@ notes: we used "hight" as units, my macbookpro is 18cm(900pixel), assume 57cm di
 so 1 degree =50 pixel, 1/18 (.055) in ratio
 below all use visual angle to caculate size, so always multiple an2ra
 
-In My Case,
+In My iMac,
 Display Height: 33.5 cm (1890 pix)
 Distance: 57.0 cm
 i.e.
 VA: 32.8 degree
 1 degree: 1890 / 32.8 = 57.6 pix
+
+In My Macbook Air 2017,
+Display Height: 17.9 cm (900 pix)
+Distance: 30.0 cm
+i.e.
+VA: 33.2 degree
+1 degree: 900 / 33.2 = 27.1 pix
+
+For this experiment, VA > 45 is required.
 """
 
 # create window and stimuli,
 # This version I used "pixel" as units
 display_size = [get_monitors()[0].width, get_monitors()[0].height]
-# print(display_size)
-VA = features.calc_VA(57.0, 33.5)
+# VA = features.calc_VA(57.0, 33.5)
+VA = features.calc_VA(20.0, 17.9)
 an2ra = 1 / VA
 an2px = round(display_size[1] / VA, 1)
+
+print("Visual Angle: {}, 1 degree: {} pix, ".format(VA, an2px))
+
 win = visual.Window(
     display_size,
     allowGUI=True,
@@ -152,25 +164,23 @@ ConC = np.array([-0.3, -0.1]) * display_size[1]
 ConS = np.array([6, 5, 4, 3, 2, 1]) * 1.4 * an2px  # 8.4, 7,5.6,4.2,2.8,1.4 VA
 
 stim_list = []
-default_size = [an2px, an2px]
+default_size = [2 * an2px, 2 * an2px]
 # Place dummy images
 for i in range(9):
     if i == 0:
         stim_list.append(
-            features.place_dummy(
-                win, "../data/dummy.png", 0, 0, default_size, display_size
-            )
+            features.place_dummy(win, "../data/dummy.png", 0, 0, default_size)
         )
     if 0 < i <= 4:
         stim_list.append(
             features.place_dummy(
-                win, "../data/dummy.png", 0.2, i % 4 * 90, default_size, display_size
+                win, "../data/dummy.png", an2px * 6, i % 4 * 90, default_size
             )
         )
     if 4 < i < 9:
         stim_list.append(
             features.place_dummy(
-                win, "../data/dummy.png", 0.4, i % 4 * 90, default_size, display_size
+                win, "../data/dummy.png", an2px * 17, i % 4 * 90, default_size
             )
         )
 # for stim in stim_list:

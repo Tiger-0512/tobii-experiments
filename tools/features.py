@@ -189,13 +189,13 @@ def domain_to_corner(domain, row, col, display_size):
     return tl, br
 
 
-def place_dummy(win, image_path, pos_rate, ori, size, display_size):
+def place_dummy(win, image_path, pos_rate, ori, size):
     stim = visual.ImageStim(
         win,
         image=Image.open(image_path),
         pos=(
-            pos_rate * math.sin(math.radians(ori)) * display_size[1],
-            pos_rate * math.cos(math.radians(ori)) * display_size[1],
+            pos_rate * math.sin(math.radians(ori)),
+            pos_rate * math.cos(math.radians(ori)),
         ),
         size=size,
     )

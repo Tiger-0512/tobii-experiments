@@ -29,10 +29,12 @@ count = 0
 print("******* Start removing background... *******")
 for p in p_list:
     count += 1
+
     f = np.fromfile(p)
     result = remove(f)
     img = Image.open(io.BytesIO(result)).convert("RGBA")
     img.save("{}/removed_{}.png".format(destination, pathlib.Path(p.name).stem))
+
     if count % 10 == 0:
         print("Removing {}th image's background...\n".format(count))
 print("\n******* Finish removing background! *******")

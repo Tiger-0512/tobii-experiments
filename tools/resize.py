@@ -12,9 +12,11 @@ def resize(target, destination, size):
     print("******* Start resizing... *******\n\n")
     for p in p_list:
         count += 1
+
         im = Image.open(p)
         im_resized = im.resize(size=size)
         im_resized.save("{}/resized_{}".format(destination, p.name))
+
         if count % 100 == 0:
             print("Resizing {}th image...\n".format(count))
     print("\n******* Finish resizing! *******")

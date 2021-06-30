@@ -202,27 +202,5 @@ def place_dummy(win, image_path, pos_rate, ori, size):
     return stim
 
 
-def ask_question(win, display_size):
-    message_1 = visual.TextStim(
-        win,
-        pos=[0, 0.15 * display_size[1]],
-        text="Was there cats?  Please press '0' or '1'.",
-    )
-    message_2 = visual.TextStim(
-        win,
-        pos=[0, 0.10 * display_size[1]],
-        text="'0': No",
-    )
-    message_3 = visual.TextStim(
-        win,
-        pos=[0, 0.05 * display_size[1]],
-        text="'1': Yes",
-    )
-    message_1.draw()
-    message_2.draw()
-    message_3.draw()
-    win.flip()
-
-
 def save_csv(df, path):
     df.to_csv(path)

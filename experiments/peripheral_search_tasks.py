@@ -1,10 +1,12 @@
 from __future__ import absolute_import, division, print_function
 import sys, random, glob
 import numpy as np
+import pandas as pd
 from collections import defaultdict
 from psychopy import core, visual, gui, data, event
 from psychopy.tools.filetools import fromFile, toFile
 from PIL import Image
+from psychopy.visual import text
 from screeninfo import get_monitors
 
 sys.path.append("../")
@@ -23,6 +25,48 @@ if dlg.OK:
     toFile("lastParams.pickle", expInfo)  # save params to file for next time
 else:
     core.quit()  # the user hit cancel so exit
+
+
+# make a text file to save data
+fileName = expInfo["Observer"] + "_" + expInfo["Session"] + "_" + expInfo["dateStr"]
+# dataFile = open(fileName+'.csv', 'w') # a simple text file with 'comma-separated- values'
+# dataFile.write('ori,sp,correct\n')
+
+"""
+From Yung-Hao San
+notes: we used "hight" as units, my macbookpro is 18cm(900pixel), assume 57cm distance,
+so 1 degree =50 pixel, 1/18 (.055) in ratio
+below all use visual angle to caculate size, so always multiple an2ra
+
+In My iMac,
+Display Height: 33.5 cm (1890 pix)
+Distance: 57.0 cm
+i.e.
+VA: 32.8 degree
+1 degree: 1890 / 32.8 = 57.6 pix
+
+In My Macbook Air 2017,
+Display Height: 17.9 cm (900 pix)
+Distance: 30.0 cm
+i.e.
+VA: 33.2 degree
+1 degree: 900 / 33.2 = 27.1 pix
+
+For this experiment, VA > 45 is required.
+"""
+
+# This version I used "pixel" as units
+display_size = [get_monitors()[0].width, get_monitors()[0].height]
+# VA = features.calc_VA(57.0, 33.5)
+VA = features.calc_VA(20.0, 17.9)
+an2ra = 1 / VA
+an2px = round(display_size[1] / VA, 1)
+print("Visual Angle: {}, 1 degree: {} pix, ".format(VA, an2px))
+
+# presenting Concentric circles and lines for control panel
+ConC = np.array([-0.3, -0.1]) * display_size[1]
+ConS = np.array([6, 5, 4, 3, 2, 1]) * 1.4 * an2px  # 8.4, 7,5.6,4.2,2.8,1.4 VA
+
 
 # 20 Classes
 # stim_classs = [
@@ -104,7 +148,6 @@ trials = data.TrialHandler(
     },
 )
 
-
 # Store images path in dictionary
 image_path_dict = defaultdict(list)
 image_path_dict[target_class] = glob.glob("../data/{}/*".format(target_class))
@@ -112,44 +155,7 @@ for c in non_target_classes:
     image_path_dict[c] = glob.glob("../data/{}/*".format(c))
 
 
-# make a text file to save data
-fileName = expInfo["Observer"] + "_" + expInfo["Session"] + "_" + expInfo["dateStr"]
-# dataFile = open(fileName+'.csv', 'w') # a simple text file with 'comma-separated- values'
-# dataFile.write('ori,sp,correct\n')
-
-"""
-From Yung-Hao San
-notes: we used "hight" as units, my macbookpro is 18cm(900pixel), assume 57cm distance,
-so 1 degree =50 pixel, 1/18 (.055) in ratio
-below all use visual angle to caculate size, so always multiple an2ra
-
-In My iMac,
-Display Height: 33.5 cm (1890 pix)
-Distance: 57.0 cm
-i.e.
-VA: 32.8 degree
-1 degree: 1890 / 32.8 = 57.6 pix
-
-In My Macbook Air 2017,
-Display Height: 17.9 cm (900 pix)
-Distance: 30.0 cm
-i.e.
-VA: 33.2 degree
-1 degree: 900 / 33.2 = 27.1 pix
-
-For this experiment, VA > 45 is required.
-"""
-
-# create window and stimuli,
-# This version I used "pixel" as units
-display_size = [get_monitors()[0].width, get_monitors()[0].height]
-# VA = features.calc_VA(57.0, 33.5)
-VA = features.calc_VA(20.0, 17.9)
-an2ra = 1 / VA
-an2px = round(display_size[1] / VA, 1)
-
-print("Visual Angle: {}, 1 degree: {} pix, ".format(VA, an2px))
-
+# Create window and stimuli,
 win = visual.Window(
     display_size,
     allowGUI=True,
@@ -159,13 +165,9 @@ win = visual.Window(
     units="pix",
 )
 
-# presenting Concentric circles and lines for control panel
-ConC = np.array([-0.3, -0.1]) * display_size[1]
-ConS = np.array([6, 5, 4, 3, 2, 1]) * 1.4 * an2px  # 8.4, 7,5.6,4.2,2.8,1.4 VA
-
+# Dummy images
 stim_list = []
 default_size = [2 * an2px, 2 * an2px]
-# Place dummy images
 for i in range(9):
     if i == 0:
         stim_list.append(
@@ -186,8 +188,7 @@ for i in range(9):
 # for stim in stim_list:
 #     stim.draw()
 
-
-# Show introduction messages
+# Introduction messages
 message_1 = visual.TextStim(
     win,
     pos=[0, 0.15 * display_size[1]],
@@ -198,6 +199,44 @@ message_2 = visual.TextStim(
     pos=[0, 0.10 * display_size[1]],
     text="Hit a Key when ready.",
 )
+# Fixation point
+fixation = fixation = visual.ShapeStim(
+    win,
+    vertices=((0, -an2px), (0, an2px), (0, 0), (-an2px, 0), (an2px, 0)),
+    lineWidth=an2px // 2,
+    closeShape=False,
+    lineColor="white",
+)
+# Question
+question_1 = visual.TextStim(
+    win,
+    pos=[0, 0.15 * display_size[1]],
+    text="Was there cats?  Please press '0' or '1'.",
+)
+question_2 = visual.TextStim(
+    win,
+    pos=[0, 0.10 * display_size[1]],
+    text="'0': No",
+)
+question_3 = visual.TextStim(
+    win,
+    pos=[0, 0.05 * display_size[1]],
+    text="'1': Yes",
+)
+# Feedback
+feedback_1 = visual.TextStim(
+    win,
+    pos=[0, 0.15 * display_size[1]],
+    text="Your answer is correct!",
+)
+feedback_2 = visual.TextStim(
+    win,
+    pos=[0, 0.15 * display_size[1]],
+    text="Your answer is incorrect.",
+)
+
+
+# Show introduction messages
 message_1.draw()
 message_2.draw()
 win.flip()
@@ -207,17 +246,31 @@ event.waitKeys()
 globalClock = core.Clock()
 
 count = 0
-results = []
+index = 0
+result = pd.DataFrame(
+    index=[],
+    columns=list(condition_list[0].keys()) + [target_class] + non_target_classes,
+)
 for cur_trial in trials:  # handler can act like a for loop
+    # Store Data
+    cur_stim = cur_trial
+
     # define motion direction ans speed
     trialClock = core.Clock()
+
+    # Show fixation cross
+    fixation.draw()
+    win.flip()
+    event.waitKeys()
 
     # Change non-target stimuli
     _non_target_classes = random.sample(non_target_classes, len(non_target_classes))
     for i, stim in enumerate(stim_list):
-        stim.image = Image.open(random.choice(image_path_dict[_non_target_classes[i]]))
+        image_path = random.choice(image_path_dict[_non_target_classes[i]])
+        stim.image = Image.open(image_path)
+        cur_stim[_non_target_classes[i]] = image_path
 
-    # Change target stimulus
+    # Change stimuli size
     for i, stim in enumerate(stim_list):
         stim.size = list(map(lambda x: cur_trial["size"] * x, default_size))
         if 0 < i <= 4:
@@ -226,29 +279,48 @@ for cur_trial in trials:  # handler can act like a for loop
             stim.size = list(
                 map(lambda x: cur_trial["rate"] * cur_trial["rate"] * x, stim.size)
             )
+
+    # Change target stimulus
     if cur_trial["state"] == 1:
+        image_path = image_path_dict[target_class][index]
         stim_list[4 * cur_trial["pos"] + cur_trial["ori"] - 3].image = Image.open(
-            random.choice(image_path_dict[target_class])
+            image_path
         )
+        cur_stim[target_class] = image_path
+        index += 1
 
     # Draw stimuli
     for stim in stim_list:
         stim.draw()
     win.flip()
-
     core.wait(1)
-    features.ask_question(win, display_size)
+
+    # Show the question
+    question_1.draw()
+    question_2.draw()
+    question_3.draw()
+    win.flip()
 
     flag = True
     while flag == 1:
         allKeys = event.waitKeys()
         for key in allKeys:
             if key in ["0", "1"]:
-                results.append(key)
+                cur_stim["ans"] = key
                 flag = False
             elif key in ["q", "escape"]:
-                print(results)
+                print(result)
+                result.to_csv("../data/result.csv")
                 core.quit()
+
+    result = result.append(cur_stim, ignore_index=True)
+
+    if int(cur_stim["ans"]) == cur_trial["state"]:
+        feedback_1.draw()
+    else:
+        feedback_2.draw()
+    win.flip()
+    event.waitKeys(maxWait=1, keyList=["space", "enter"])
 
     count += 1
 
@@ -258,7 +330,8 @@ endthank.draw()
 win.flip()
 event.waitKeys()  # wait for participant to respond
 
-print(results)
+print(result)
+result.to_csv("../data/result.csv")
 
 # trials.saveAsPickle(fileName='testData')
 

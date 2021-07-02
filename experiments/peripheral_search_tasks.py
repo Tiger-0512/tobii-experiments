@@ -3,7 +3,7 @@ Excute this experiment in 'experiments' directory
 """
 
 from __future__ import absolute_import, division, print_function
-import sys, random, glob
+import random, glob, math, os
 import numpy as np
 import pandas as pd
 from collections import defaultdict
@@ -12,8 +12,22 @@ from psychopy.tools.filetools import fromFile, toFile
 from PIL import Image
 from screeninfo import get_monitors
 
-sys.path.append("../")
-from tools import features
+
+def calc_VA(distance, size):
+    return round(360 / math.pi * math.atan2(size, 2 * distance), 1)
+
+
+def place_image(win, image_path, an2px, eccentricity, ori, size):
+    stim = visual.ImageStim(
+        win,
+        image=Image.open(image_path),
+        pos=(
+            an2px * eccentricity * math.sin(math.radians(ori)),
+            an2px * eccentricity * math.cos(math.radians(ori)),
+        ),
+        size=size,
+    )
+    return stim
 
 
 try:  # try to get a previous parameters file
@@ -31,6 +45,9 @@ if dlg.OK:
 else:
     core.quit()  # the user hit cancel so exit
 
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./experiments")
 
 # make a text file to save data
 file_name = exp_info["Observer"] + "_" + exp_info["Session"] + "_" + exp_info["dateStr"]
@@ -60,8 +77,8 @@ VA: 33.2 degree
 
 # This version I used "pixel" as units
 display_size = [get_monitors()[0].width, get_monitors()[0].height]
-# VA = features.calc_VA(57.0, 33.5)
-VA = features.calc_VA(57.0, 17.9)
+# VA = calc_VA(57.0, 33.5)
+VA = calc_VA(57.0, 17.9)
 an2ra = 1 / VA
 an2px = round(display_size[1] / VA, 1)
 print("Visual Angle: {}, 1 degree: {} pix, ".format(VA, an2px))
@@ -90,10 +107,18 @@ non_target_classes = [
 
 
 # making condition list: 2 * 2 * 2 * 3 * 4 = 96 conditions
+practice_list = []
 condition_list = []
 for size in [1, 2]:  # 2 stimuli size
-    for rate in [1, 2]:  # 3 magnification rates to periphery
+    for rate in [1, 2]:  # 2 magnification rates to periphery
         for state in [0, 1]:  # 2 state (whether the target exists or not)
+            practice_list.append(
+                {
+                    "size": size,
+                    "rate": rate,
+                    "state": state,
+                }
+            )
             for pos in [0, 1, 2]:  # 3 positions (0: center)
                 for ori in [0, 1, 2, 3]:  # 4 directions
                     condition_list.append(
@@ -106,7 +131,19 @@ for size in [1, 2]:  # 2 stimuli size
                         }
                     )
 
-# organize them with the trial handler  repeated 10 times
+# Organize them with the trial handler for the practice section
+practice = data.TrialHandler(
+    practice_list,
+    1,
+    method="random",
+    extraInfo={
+        "participant": exp_info["Observer"],
+        "session": exp_info["Session"],
+        "MotionType": exp_info["Type[1: RDK; 2: Grating]"],
+    },
+)
+
+# Organize them with the trial handler: repeated 2 times
 trials = data.TrialHandler(
     condition_list,
     2,
@@ -144,13 +181,14 @@ eccentricity_level_3 = round(
 
 # Dummy images
 stim_list = []
+dummy_path = "../data/dummy.png"
 default_size = [an2px, an2px]
 for i in range(12):
     if i < 4:
         stim_list.append(
-            features.place_dummy(
+            place_image(
                 win,
-                "../data/dummy.png",
+                dummy_path,
                 an2px,
                 eccentricity_level_1,
                 i % 4 * 90 + 45,
@@ -159,9 +197,9 @@ for i in range(12):
         )
     elif 4 <= i < 8:
         stim_list.append(
-            features.place_dummy(
+            place_image(
                 win,
-                "../data/dummy.png",
+                dummy_path,
                 an2px,
                 eccentricity_level_2,
                 i % 4 * 90,
@@ -170,9 +208,9 @@ for i in range(12):
         )
     else:
         stim_list.append(
-            features.place_dummy(
+            place_image(
                 win,
-                "../data/dummy.png",
+                dummy_path,
                 an2px,
                 eccentricity_level_3,
                 i % 4 * 90 + 45,
@@ -191,6 +229,11 @@ introduction_1 = visual.TextStim(
 introduction_2 = visual.TextStim(
     win,
     pos=[0, 0.10 * display_size[1]],
+    text="First, let's practice with some stimuli.",
+)
+introduction_3 = visual.TextStim(
+    win,
+    pos=[0, 0.05 * display_size[1]],
     text="Hit a Key when ready.",
 )
 # Fixation cross
@@ -244,18 +287,21 @@ break_2 = visual.TextStim(
 # Show introduction messages
 introduction_1.draw()
 introduction_2.draw()
+introduction_3.draw()
 win.flip()
 # pause until there's a keypress
 event.waitKeys()
 
-globalClock = core.Clock()
 
 count = 0
+globalClock = core.Clock()
+
 result = pd.DataFrame(
     index=[],
     columns=list(condition_list[0].keys()) + [target_class] + non_target_classes,
 )
-for cur_trial in trials:  # handler can act like a for loop
+# Start trials
+for cur_trial in trials:
     # Store Data
     cur_stim = cur_trial
 

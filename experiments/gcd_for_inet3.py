@@ -1,4 +1,4 @@
-import sys, glob, textwrap, json
+import sys, os, glob, textwrap, json
 import tobii_research as tr
 import pandas as pd
 import numpy as np
@@ -23,6 +23,10 @@ def gaze_data_callback(gaze_data):
     ]  # (y_coordinate, x_coordinate)
     out.append([gaze_left_eye, gaze_right_eye])
 
+
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./experiments")
 
 # Settings
 found_eyetrackers = tr.find_all_eyetrackers()

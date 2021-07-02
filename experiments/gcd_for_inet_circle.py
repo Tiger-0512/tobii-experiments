@@ -1,9 +1,8 @@
-import sys
+import sys, os
 import tobii_research as tr
 import pandas as pd
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
-from matplotlib import pyplot as plt
 from psychopy import core, visual, gui, data, event
 
 sys.path.append("../")
@@ -24,6 +23,10 @@ def gaze_data_callback(gaze_data):
     ]  # (y_coordinate, x_coordinate)
     out.append([gaze_left_eye, gaze_right_eye])
 
+
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./experiments")
 
 # Settings
 found_eyetrackers = tr.find_all_eyetrackers()

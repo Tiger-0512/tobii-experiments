@@ -1,4 +1,4 @@
-import sys
+import sys, os
 import tobii_research as tr
 import pandas as pd
 import numpy as np
@@ -6,6 +6,18 @@ from psychopy import core, visual, event
 
 sys.path.append("../")
 from tools import features
+
+
+def change_message(pos_pix, msg, shown_msg):
+    if (
+        shown_msg.pos[0] - 100 < pos_pix[0] < shown_msg.pos[0] + 100
+        and shown_msg.pos[1] - 100 < pos_pix[1] < shown_msg.pos[1] + 100
+    ):
+        shown_msg.text = msg
+        shown_msg.height = 64
+    else:
+        shown_msg.text = msg[0]
+        shown_msg.height = 192
 
 
 def gaze_data_callback(gaze_data):
@@ -22,6 +34,10 @@ def gaze_data_callback(gaze_data):
     ]  # (y_coordinate, x_coordinate)
     out.append([gaze_left_eye, gaze_right_eye])
 
+
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./experiments")
 
 # Settings
 found_eyetrackers = tr.find_all_eyetrackers()
@@ -112,11 +128,11 @@ while True:
     x_pix = x * display_size[0] / 2
     y_pix = y * display_size[1] / 2
 
-    features.change_message((x_pix, y_pix), msg_list[0], msg_center)
-    features.change_message((x_pix, y_pix), msg_list[1], msg_left)
-    features.change_message((x_pix, y_pix), msg_list[2], msg_right)
-    features.change_message((x_pix, y_pix), msg_list[3], msg_top)
-    features.change_message((x_pix, y_pix), msg_list[4], msg_bottom)
+    change_message((x_pix, y_pix), msg_list[0], msg_center)
+    change_message((x_pix, y_pix), msg_list[1], msg_left)
+    change_message((x_pix, y_pix), msg_list[2], msg_right)
+    change_message((x_pix, y_pix), msg_list[3], msg_top)
+    change_message((x_pix, y_pix), msg_list[4], msg_bottom)
 
     circle.pos = (x, y)
 

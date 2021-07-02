@@ -27,6 +27,10 @@ def gaze_data_callback(gaze_data):
     out.append([gaze_left_eye, gaze_right_eye])
 
 
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./experiments")
+
 # Settings
 found_eyetrackers = tr.find_all_eyetrackers()
 my_eyetracker = found_eyetrackers[0]

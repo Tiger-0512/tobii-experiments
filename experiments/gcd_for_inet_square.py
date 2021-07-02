@@ -1,4 +1,4 @@
-import sys, glob, textwrap, json
+import sys, os, glob, textwrap, json
 import tobii_research as tr
 import pandas as pd
 import numpy as np
@@ -7,6 +7,25 @@ from psychopy import core, visual, gui, data, event
 
 sys.path.append("../")
 from tools import features
+
+
+def search_domain(x, y, threshold):
+    for i in range(len(threshold[0]) - 1):
+        for j in range(len(threshold[1]) - 1):
+            if (
+                threshold[0][i] <= x <= threshold[0][i + 1]
+                and threshold[1][j] >= y >= threshold[1][j + 1]
+            ):
+                return (i, j)
+    return (-1, -1)
+
+
+def domain_to_corner(domain, row, col, display_size):
+    len_hor = int(display_size[0] / row)
+    len_var = int(display_size[1] / col)
+    tl = (len_hor * domain[0], len_var * domain[1])
+    br = (len_hor * (domain[0] + 1), len_var * (domain[1] + 1))
+    return tl, br
 
 
 def gaze_data_callback(gaze_data):
@@ -23,6 +42,10 @@ def gaze_data_callback(gaze_data):
     ]  # (y_coordinate, x_coordinate)
     out.append([gaze_left_eye, gaze_right_eye])
 
+
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./experiments")
 
 # Settings
 found_eyetrackers = tr.find_all_eyetrackers()
@@ -130,8 +153,8 @@ while True:
     x_circle, y_circle = 2 * (x - 0.5), 2 * (y_circle + 0.5)
     circle.pos = (x_circle, y_circle)
 
-    cur_domain = features.search_domain(x_circle, y_circle, threshold)
-    tl, br = features.domain_to_corner(cur_domain, row, col, display_size)
+    cur_domain = search_domain(x_circle, y_circle, threshold)
+    tl, br = domain_to_corner(cur_domain, row, col, display_size)
     mask_base = Image.new("L", img_size, 0)
     mask = ImageDraw.Draw(mask_base)
     mask.rectangle((tl, br), fill=255)

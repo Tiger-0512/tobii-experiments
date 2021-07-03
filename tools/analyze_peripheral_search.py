@@ -1,12 +1,18 @@
+import os
 import pandas as pd
 
 
 def calculate_acc(df):
-    return len(df[df["ans"] == 1]) / len(df)
+    df_ok = df.query("state == ans")
+    return len(df_ok) / len(df)
 
+
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./tools")
 
 # Import csv file
-df = pd.read_csv("../data/yh_1_2021_Jul_02_1736.csv", index_col=0)
+df = pd.read_csv("../data/unknown_1_2021_Jul_03_1942.csv", index_col=0)
 print(calculate_acc(df))
 
 # size = 1, rate = 1

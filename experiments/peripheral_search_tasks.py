@@ -56,9 +56,9 @@ class PeripheralStimTask:
         stim_list,
         n_reps,
         fixation,
-        questions,
+        question,
         feedbacks,
-        breaks,
+        rest,
     ):
         self.mode = mode
         self.default_size = default_size
@@ -66,9 +66,9 @@ class PeripheralStimTask:
         self.stim_list = stim_list
         self.n_reps = n_reps
         self.fixation = fixation
-        self.questions = questions
+        self.question = question
         self.feedbacks = feedbacks
-        self.breaks = breaks
+        self.rest = rest
 
         # Store images path in dictionary
         self.image_path_dict = defaultdict(list)
@@ -77,6 +77,45 @@ class PeripheralStimTask:
         )
         for c in PeripheralStimTask.non_target_classes:
             self.image_path_dict[c] = glob.glob("../data/{}/*".format(c))
+
+    def change_stim(self, cur_trial):
+        # Change non-target stimuli
+        _non_target_classes = random.sample(
+            PeripheralStimTask.non_target_classes,
+            len(PeripheralStimTask.non_target_classes),
+        )
+        for i, stim in enumerate(self.stim_list):
+            image_path = random.choice(self.image_path_dict[_non_target_classes[i]])
+            stim.image = Image.open(image_path)
+            cur_trial[_non_target_classes[i]] = image_path
+
+        # Change stimuli size
+        for i, stim in enumerate(self.stim_list):
+            stim.size = list(map(lambda x: cur_trial["size"] * x, self.default_size))
+            if 4 <= i < 8:
+                stim.size = list(map(lambda x: cur_trial["rate"] * x, stim.size))
+            elif i >= 8:
+                stim.size = list(
+                    map(
+                        lambda x: cur_trial["rate"] * cur_trial["rate"] * x,
+                        stim.size,
+                    )
+                )
+
+        # Change target stimulus
+        if cur_trial["state"] == 1:
+            image_path = random.choice(
+                self.image_path_dict[PeripheralStimTask.target_class]
+            )
+            self.stim_list[4 * cur_trial["pos"] + cur_trial["ori"]].image = Image.open(
+                image_path
+            )
+            cur_trial[PeripheralStimTask.target_class] = image_path
+
+        # Draw stimuli
+        for stim in self.stim_list:
+            stim.draw()
+        return cur_trial
 
     def create_trial(self):
         trials = data.TrialHandler(
@@ -91,7 +130,7 @@ class PeripheralStimTask:
         )
         return trials
 
-    def excute_trial(self):
+    def excute_trial(self, trials):
         count = 0
 
         # Create data store
@@ -102,10 +141,9 @@ class PeripheralStimTask:
             + PeripheralStimTask.non_target_classes,
         )
 
-        trials = self.create_trial()
         # Start trials
         for cur_trial in trials:
-            cur_stim = cur_trial
+            # cur_stim = cur_trial
 
             # Show fixation cross
             self.fixation.draw()
@@ -114,50 +152,13 @@ class PeripheralStimTask:
             # Gitter
             core.wait(0.1)
 
-            # Change non-target stimuli
-            _non_target_classes = random.sample(
-                PeripheralStimTask.non_target_classes,
-                len(PeripheralStimTask.non_target_classes),
-            )
-            for i, stim in enumerate(self.stim_list):
-                image_path = random.choice(self.image_path_dict[_non_target_classes[i]])
-                stim.image = Image.open(image_path)
-                cur_stim[_non_target_classes[i]] = image_path
-
-            # Change stimuli size
-            for i, stim in enumerate(self.stim_list):
-                stim.size = list(
-                    map(lambda x: cur_trial["size"] * x, self.default_size)
-                )
-                if 4 <= i < 8:
-                    stim.size = list(map(lambda x: cur_trial["rate"] * x, stim.size))
-                elif i >= 8:
-                    stim.size = list(
-                        map(
-                            lambda x: cur_trial["rate"] * cur_trial["rate"] * x,
-                            stim.size,
-                        )
-                    )
-
-            # Change target stimulus
-            if cur_trial["state"] == 1:
-                image_path = random.choice(
-                    self.image_path_dict[PeripheralStimTask.target_class]
-                )
-                self.stim_list[
-                    4 * cur_trial["pos"] + cur_trial["ori"]
-                ].image = Image.open(image_path)
-                cur_stim[PeripheralStimTask.target_class] = image_path
-
-            # Draw stimuli
-            for stim in self.stim_list:
-                stim.draw()
+            # Change stimuli
+            self.change_stim(cur_trial)
             win.flip()
             core.wait(0.2)
 
             # Show the question
-            for q in self.questions:
-                q.draw()
+            self.question.draw()
             win.flip()
 
             # Answer the question or Exit
@@ -166,16 +167,19 @@ class PeripheralStimTask:
                 allKeys = event.waitKeys()
                 for key in allKeys:
                     if key in ["0", "1"]:
-                        cur_stim["ans"] = key
+                        # cur_stim["ans"] = key
+                        cur_trial["ans"] = key
                         flag = False
                     elif key in ["q", "escape"]:
                         print(result)
                         result.to_csv("../data/result.csv")
                         core.quit()
 
-            result = result.append(cur_stim, ignore_index=True)
+            # result = result.append(cur_stim, ignore_index=True)
+            result = result.append(cur_trial, ignore_index=True)
 
-            if int(cur_stim["ans"]) == cur_trial["state"]:
+            # if int(cur_stim["ans"]) == cur_trial["state"]:
+            if int(cur_trial["ans"]) == cur_trial["state"]:
                 self.feedbacks[0].draw()
             else:
                 self.feedbacks[1].draw()
@@ -188,11 +192,9 @@ class PeripheralStimTask:
                 and count != len(self.condition_list) * self.n_reps
             ):
                 # Take a short break
-                self.breaks[0].draw()
-                self.breaks[1].draw()
+                self.rest.draw()
                 win.flip()
                 core.wait(60)
-
         return result
 
 
@@ -261,6 +263,8 @@ eccentricity_level_3 = round(
     np.roots([1, -np.sqrt(2) - 4, 4 * np.sqrt(2) - 27]).max(), 1
 )
 
+# This is the example to explain the experiment
+example_list = [{"size": 1, "rate": 2, "state": 1, "pos": 1, "ori": 3}]
 # Practice list: 2 * 2 * 2 = 8 conditions
 # Condition list: 2 * 2 * 2 * 3 * 4 = 96 conditions
 practice_list = []
@@ -343,33 +347,31 @@ for i in range(12):
 # Introduction messages
 introduction_1 = visual.TextStim(
     win,
-    pos=[0, 0.05 * display_size[1]],
-    text="Please answer the question \nwhether cats exist in the stimuli.",
+    pos=[0, 0],
+    text="Thank you for participating in the experiment. \n\n"
+    + "First, look at the example.",
 )
 introduction_2 = visual.TextStim(
     win,
-    pos=[0, 0],
-    text="First, let's practice with some stimuli.",
+    pos=[0, 0.40 * display_size[1]],
+    text="This is the example of the stimuli. \n\n"
+    + "Before the stimuli presented, \n the fixation cross is shown. \n\n"
+    + "When you hit 'space' Key, \n stimuli are presented in 200 millisecond. \n\n"
+    + "Please answer the question \n whether cats exist in the stimuli. \n\n"
+    + "In this case, the answer is 'Yes'. \n\n"
+    + "Notice: When you look at the stimuli, \n please focus on the center of the display.",
 )
 introduction_3 = visual.TextStim(
     win,
-    pos=[0, -0.05 * display_size[1]],
-    text="Hit a Key when ready.",
+    pos=[0, 0],
+    text="Let's practice with some stimuli. \n\n" + "Hit a Key when ready.",
 )
 introduction_4 = visual.TextStim(
     win,
     pos=[0, 0.05 * display_size[1]],
-    text="Practice part has finished.",
-)
-introduction_5 = visual.TextStim(
-    win,
-    pos=[0, 0],
-    text="Next part is the experiment.",
-)
-introduction_6 = visual.TextStim(
-    win,
-    pos=[0, -0.05 * display_size[1]],
-    text="Hit 's' key when ready.",
+    text="Practice part has finished. \n\n"
+    + "Next part is the experiment. \n\n"
+    + "Hit 's' Key when ready.",
 )
 # Fixation cross
 fixation = fixation = visual.ShapeStim(
@@ -380,20 +382,10 @@ fixation = fixation = visual.ShapeStim(
     lineColor="white",
 )
 # Question
-question_1 = visual.TextStim(
+question = visual.TextStim(
     win,
     pos=[0, 0.05 * display_size[1]],
-    text="Was there cats?  Please press '0' or '1'.",
-)
-question_2 = visual.TextStim(
-    win,
-    pos=[0, 0],
-    text="'0': No",
-)
-question_3 = visual.TextStim(
-    win,
-    pos=[0, -0.05 * display_size[1]],
-    text="'1': Yes",
+    text="Was there cats?  Please press '0' or '1'. \n\n" "'0': No \n\n" "'1': Yes",
 )
 # Feedback
 feedback_1 = visual.TextStim(
@@ -407,21 +399,37 @@ feedback_2 = visual.TextStim(
     text="Your answer is incorrect.",
 )
 # Break
-break_1 = visual.TextStim(
+rest = visual.TextStim(
     win,
     pos=[0, 0.025 * display_size[1]],
-    text="Please take a short break.",
-)
-break_2 = visual.TextStim(
-    win,
-    pos=[0, -0.025 * display_size[1]],
-    text="If the experiment is ready, \nthe window will change to the fixation cross.",
+    text="Please take a short break. \n\n"
+    + "If the experiment is ready, \n the window will change to the fixation cross.",
 )
 
 
-# Show introduction messages
+# Show introduction messages and the example
 introduction_1.draw()
-introduction_2.draw()
+win.flip()
+event.waitKeys()
+print("Start Example")
+Example = PeripheralStimTask(
+    "example",
+    default_size,
+    example_list,
+    stim_list,
+    1,
+    fixation,
+    question,
+    [feedback_1, feedback_2],
+    rest,
+)
+example_trials = Example.create_trial()
+for trial in example_trials:
+    Example.change_stim(trial)
+    introduction_2.draw()
+    win.flip()
+    event.waitKeys()
+
 introduction_3.draw()
 win.flip()
 # Pause until there's a keypress
@@ -436,17 +444,15 @@ Practice = PeripheralStimTask(
     stim_list,
     1,
     fixation,
-    [question_1, question_2, question_3],
+    question,
     [feedback_1, feedback_2],
-    [break_1, break_2],
+    rest,
 )
-Practice.create_trial()
-result = Practice.excute_trial()
+practice_trials = Practice.create_trial()
+result = Practice.excute_trial(practice_trials)
 print(result)
 
 introduction_4.draw()
-introduction_5.draw()
-introduction_6.draw()
 win.flip()
 event.waitKeys(keyList=["s"])
 
@@ -461,12 +467,12 @@ Experiment = PeripheralStimTask(
     stim_list,
     2,
     fixation,
-    [question_1, question_2, question_3],
+    question,
     [feedback_1, feedback_2],
-    [break_1, break_2],
+    rest,
 )
-Experiment.create_trial()
-result = Experiment.excute_trial()
+experiment_trials = Experiment.create_trial()
+result = Experiment.excute_trial(experiment_trials)
 print(result)
 result.to_csv("../data/{}.csv".format(file_name))
 

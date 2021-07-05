@@ -112,6 +112,9 @@ class PeripheralStimTask:
             )
             cur_trial[PeripheralStimTask.target_class] = image_path
 
+        # Show fixation cross
+        self.fixation.draw()
+
         # Draw stimuli
         for stim in self.stim_list:
             stim.draw()
@@ -150,12 +153,18 @@ class PeripheralStimTask:
             win.flip()
             event.waitKeys()
             # Gitter
-            core.wait(0.1)
+            core.wait(0.5)
 
             # Change stimuli
+            # self.fixation.draw()
             self.change_stim(cur_trial)
             win.flip()
-            core.wait(0.2)
+            core.wait(1.0)
+
+            # Show fixation cross
+            self.fixation.draw()
+            win.flip()
+            core.wait(0.5)
 
             # Show the question
             self.question.draw()
@@ -353,7 +362,7 @@ introduction_1 = visual.TextStim(
 )
 introduction_2 = visual.TextStim(
     win,
-    pos=[0, 0.40 * display_size[1]],
+    pos=[0.40 * display_size[1], 0],
     text="This is the example of the stimuli. \n\n"
     + "Before the stimuli presented, \n the fixation cross is shown. \n\n"
     + "When you hit 'space' Key, \n stimuli are presented in 200 millisecond. \n\n"
@@ -376,8 +385,14 @@ introduction_4 = visual.TextStim(
 # Fixation cross
 fixation = fixation = visual.ShapeStim(
     win,
-    vertices=((0, -an2px), (0, an2px), (0, 0), (-an2px, 0), (an2px, 0)),
-    lineWidth=an2px // 2,
+    vertices=(
+        (0, -an2px // 2),
+        (0, an2px // 2),
+        (0, 0),
+        (-an2px // 2, 0),
+        (an2px // 2, 0),
+    ),
+    lineWidth=an2px // 4,
     closeShape=False,
     lineColor="white",
 )

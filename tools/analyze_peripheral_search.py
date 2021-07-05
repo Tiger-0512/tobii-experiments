@@ -12,7 +12,7 @@ if not os.path.isfile(os.path.basename(__file__)):
     os.chdir("./tools")
 
 # Import csv file
-df = pd.read_csv("../data/unknown_1_2021_Jul_03_1942.csv", index_col=0)
+df = pd.read_csv("../data/jason_1_2021_Jul_05_1519.csv", index_col=0)
 print(calculate_acc(df))
 
 # size = 1, rate = 1

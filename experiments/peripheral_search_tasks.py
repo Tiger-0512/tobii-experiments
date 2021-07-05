@@ -3,7 +3,7 @@ Excute this experiment in 'experiments' directory
 """
 
 from __future__ import absolute_import, division, print_function
-import random, glob, math, os
+import random, glob, math, os, argparse
 import numpy as np
 import pandas as pd
 from collections import defaultdict
@@ -72,9 +72,14 @@ class PeripheralStimTask:
 
         # Store images path in dictionary
         self.image_path_dict = defaultdict(list)
-        self.image_path_dict[PeripheralStimTask.target_class] = glob.glob(
-            "../data/{}/*".format(PeripheralStimTask.target_class)
-        )
+        if self.mode == "random":
+            self.image_path_dict[PeripheralStimTask.target_class] = glob.glob(
+                "../data/{}/*".format(PeripheralStimTask.target_class)
+            )
+        else:  # self.mode == "fixed"
+            # When the target-class is "cat"
+            fixed_target_path = "../data/cat/cutout_removed_n02123045_4812.png"
+            self.image_path_dict[PeripheralStimTask.target_class] = [fixed_target_path]
         for c in PeripheralStimTask.non_target_classes:
             self.image_path_dict[c] = glob.glob("../data/{}/*".format(c))
 
@@ -112,12 +117,13 @@ class PeripheralStimTask:
             )
             cur_trial[PeripheralStimTask.target_class] = image_path
 
-        # Show fixation cross
-        self.fixation.draw()
-
         # Draw stimuli
         for stim in self.stim_list:
             stim.draw()
+
+        # Show fixation point
+        self.fixation.fillColor = (192, 192, 192)
+        self.fixation.draw()
         return cur_trial
 
     def create_trial(self):
@@ -146,22 +152,28 @@ class PeripheralStimTask:
 
         # Start trials
         for cur_trial in trials:
-            # cur_stim = cur_trial
+            trial_clock = core.Clock()
 
-            # Show fixation cross
+            # Show fixation point
+            self.fixation.fillColor = (64, 64, 64)
             self.fixation.draw()
             win.flip()
             event.waitKeys()
+
+            # Change fixation point's color
+            self.fixation.fillColor = (192, 192, 192)
+            self.fixation.draw()
+            win.flip()
             # Gitter
             core.wait(0.5)
 
             # Change stimuli
-            # self.fixation.draw()
             self.change_stim(cur_trial)
             win.flip()
+            trial_onset = trial_clock.getTime()
             core.wait(1.0)
 
-            # Show fixation cross
+            # Show fixation point
             self.fixation.draw()
             win.flip()
             core.wait(0.5)
@@ -176,7 +188,8 @@ class PeripheralStimTask:
                 allKeys = event.waitKeys()
                 for key in allKeys:
                     if key in ["0", "1"]:
-                        # cur_stim["ans"] = key
+                        trial_offset = trial_clock.getTime()
+                        cur_trial["durationTime"] = trial_offset - trial_onset
                         cur_trial["ans"] = key
                         flag = False
                     elif key in ["q", "escape"]:
@@ -184,10 +197,10 @@ class PeripheralStimTask:
                         result.to_csv("../data/result.csv")
                         core.quit()
 
-            # result = result.append(cur_stim, ignore_index=True)
+            # Store current trial data in df
             result = result.append(cur_trial, ignore_index=True)
 
-            # if int(cur_stim["ans"]) == cur_trial["state"]:
+            # Show feedback
             if int(cur_trial["ans"]) == cur_trial["state"]:
                 self.feedbacks[0].draw()
             else:
@@ -207,35 +220,38 @@ class PeripheralStimTask:
         return result
 
 
-try:  # try to get a previous parameters file
-    exp_info = fromFile("lastParams.pickle")
-except:  # if not there then use a default set
-    exp_info = {"Observer": "unknown", "Session": "1", "Type[1: RDK; 2: Grating]": "1"}
-exp_info["dateStr"] = data.getDateStr()  # add the current time
-
-# present a dialogue to change params
-dlg = gui.DlgFromDict(
-    exp_info, title="Peripheral Vision Search Experiment", fixed=["dateStr"]
+# Set arguments
+parser = argparse.ArgumentParser(description="Peripheral Search Tasks")
+parser.add_argument("device", help="'iMac' or 'Macbook' (Air 2017)")
+parser.add_argument(
+    "--mode",
+    default="random",
+    help="target-class is 'random' image from list or 'fixed' on the one image.",
 )
-if dlg.OK:
-    toFile("lastParams.pickle", exp_info)  # save params to file for next time
+args = parser.parse_args()
+device = args.device
+mode = args.mode
+
+# Check arguments
+if device == "iMac":
+    print("This device is iMac")
+    va_arg = (57.0, 33.5)
+elif device == "Macbook":
+    va_arg = (57.0, 17.9)
+    print("This device is Macbook")
 else:
-    core.quit()  # the user hit cancel so exit
+    print("Device is not found.")
+    core.quit()
+if not mode in ["random", "fixed"]:
+    print("Such a mode doesn't exist.")
+    core.quit()
 
-# Change working directory
-if not os.path.isfile(os.path.basename(__file__)):
-    os.chdir("./experiments")
-
-# make a text file to save data
-file_name = exp_info["Observer"] + "_" + exp_info["Session"] + "_" + exp_info["dateStr"]
-# data_file = open(file_name+'.csv', 'w') # a simple text file with 'comma-separated- values'
-# data_file.write('ori,sp,correct\n')
 
 """
 From Yung-Hao San
 notes: we used "hight" as units, my macbookpro is 18cm(900pixel), assume 57cm distance,
 so 1 degree =50 pixel, 1/18 (.055) in ratio
-below all use visual angle to caculate size, so always multiple an2ra
+below all use visual angle to calculate size, so always multiple an2ra
 
 In My iMac,
 Display Height: 33.5 cm (1890 pix)
@@ -251,21 +267,47 @@ i.e.
 VA: 33.2 degree
 1 degree: 900 / 33.2 = 27.1 pix
 """
-
-# This version I used "pixel" as units
+# Calculate the visual angle and the pixel per angle
+VA = calc_VA(va_arg[0], va_arg[1])
 display_size = [get_monitors()[0].width, get_monitors()[0].height]
-# VA = calc_VA(57.0, 33.5)
-VA = calc_VA(57.0, 17.9)
-an2ra = 1 / VA
+an2ra = 1 / VA  # Doesn't use in this experiment
 an2px = round(display_size[1] / VA, 1)
-print("Visual Angle: {}, 1 degree: {} pix, ".format(VA, an2px))
-
-# presenting Concentric circles and lines for control panel
-ConC = np.array([-0.3, -0.1]) * display_size[1]
-ConS = np.array([6, 5, 4, 3, 2, 1]) * 1.4 * an2px  # 8.4, 7,5.6,4.2,2.8,1.4 VA
+print("Visual Angle: {}, degree: {} pix, ".format(VA, an2px))
 
 
-# Calcurate eccentricities of stimuli
+# Change working directory
+if not os.path.isfile(os.path.basename(__file__)):
+    os.chdir("./experiments")
+
+
+# Try to get a previous parameters file
+try:
+    exp_info = fromFile("lastParams.pickle")
+# If not there then use a default set
+except:
+    exp_info = {"Observer": "unknown", "Session": "1", "Type[1: RDK; 2: Grating]": "1"}
+# Add the current time
+exp_info["dateStr"] = data.getDateStr()
+
+# Present a dialogue to change params
+dlg = gui.DlgFromDict(
+    exp_info, title="Peripheral Vision Search Experiment", fixed=["dateStr"]
+)
+# Save params to file for next time
+if dlg.OK:
+    toFile("lastParams.pickle", exp_info)
+# The user hit cancel so exit
+else:
+    core.quit()
+
+
+# Make a text file to save data
+file_name = exp_info["Observer"] + "_" + exp_info["Session"] + "_" + exp_info["dateStr"]
+# data_file = open(file_name+'.csv', 'w') # a simple text file with 'comma-separated- values'
+# data_file.write('ori,sp,correct\n')
+
+
+# Calculate eccentricities of stimuli
 eccentricity_level_1 = round(np.sqrt(2), 1)
 eccentricity_level_2 = round(np.roots([1, -2, -7]).max(), 1)
 eccentricity_level_3 = round(
@@ -356,69 +398,64 @@ for i in range(12):
 # Introduction messages
 introduction_1 = visual.TextStim(
     win,
-    pos=[0, 0],
+    pos=(0, 0),
     text="Thank you for participating in the experiment. \n\n"
-    + "First, look at the example.",
+    + "First, look at the example. \n\n"
+    + "Hit a Key when ready.",
 )
 introduction_2 = visual.TextStim(
     win,
-    pos=[0.40 * display_size[1], 0],
+    pos=(0.30 * display_size[0], 0),
     text="This is the example of the stimuli. \n\n"
-    + "Before the stimuli presented, \n the fixation cross is shown. \n\n"
-    + "When you hit 'space' Key, \n stimuli are presented in 200 millisecond. \n\n"
+    + "Before the stimuli presented, \n the fixation point is shown. \n\n"
+    + "When you hit 'space' Key, \n stimuli are presented in 1 second. \n\n"
     + "Please answer the question \n whether cats exist in the stimuli. \n\n"
     + "In this case, the answer is 'Yes'. \n\n"
     + "Notice: When you look at the stimuli, \n please focus on the center of the display.",
 )
 introduction_3 = visual.TextStim(
     win,
-    pos=[0, 0],
+    pos=(0, 0),
     text="Let's practice with some stimuli. \n\n" + "Hit a Key when ready.",
 )
 introduction_4 = visual.TextStim(
     win,
-    pos=[0, 0.05 * display_size[1]],
+    pos=(0, 0.05 * display_size[1]),
     text="Practice part has finished. \n\n"
     + "Next part is the experiment. \n\n"
     + "Hit 's' Key when ready.",
 )
-# Fixation cross
-fixation = fixation = visual.ShapeStim(
+# Fixation point
+fixation = visual.Circle(
     win,
-    vertices=(
-        (0, -an2px // 2),
-        (0, an2px // 2),
-        (0, 0),
-        (-an2px // 2, 0),
-        (an2px // 2, 0),
-    ),
-    lineWidth=an2px // 4,
-    closeShape=False,
-    lineColor="white",
+    pos=(0, 0),
+    size=an2px // 5,
+    fillColor=(64, 64, 64),
+    colorSpace="rgb255",
 )
 # Question
 question = visual.TextStim(
     win,
-    pos=[0, 0.05 * display_size[1]],
+    pos=(0, 0.05 * display_size[1]),
     text="Was there cats?  Please press '0' or '1'. \n\n" "'0': No \n\n" "'1': Yes",
 )
 # Feedback
 feedback_1 = visual.TextStim(
     win,
-    pos=[0, 0],
+    pos=(0, 0),
     text="Your answer is correct!",
 )
 feedback_2 = visual.TextStim(
     win,
-    pos=[0, 0],
+    pos=(0, 0),
     text="Your answer is incorrect.",
 )
 # Break
 rest = visual.TextStim(
     win,
-    pos=[0, 0.025 * display_size[1]],
+    pos=(0, 0),
     text="Please take a short break. \n\n"
-    + "If the experiment is ready, \n the window will change to the fixation cross.",
+    + "If the experiment is ready, \n the window will change to the fixation point.",
 )
 
 
@@ -428,7 +465,7 @@ win.flip()
 event.waitKeys()
 print("Start Example")
 Example = PeripheralStimTask(
-    "example",
+    mode,
     default_size,
     example_list,
     stim_list,
@@ -445,15 +482,31 @@ for trial in example_trials:
     win.flip()
     event.waitKeys()
 
-introduction_3.draw()
-win.flip()
-# Pause until there's a keypress
-event.waitKeys()
+if mode == "fixed":
+    visual.TextStim(
+        win,
+        pos=(0, 0.10 * display_size[1]),
+        text="This cat is the target. \n\n"
+        + "This target image doesn't change \n in the whole of the experiment.",
+    ).draw()
+    visual.ImageStim(
+        win,
+        image="../data/cat/cutout_removed_n02123045_4812.png",
+        pos=(0, -0.10 * display_size[1]),
+        size=list(map(lambda x: 4 * x, default_size)),
+    ).draw()
+    win.flip()
+    event.waitKeys()
+
 
 # Start the practice part
+introduction_3.draw()
+win.flip()
+event.waitKeys()
+
 print("Start Practice")
 Practice = PeripheralStimTask(
-    "practice",
+    mode,
     default_size,
     practice_list,
     stim_list,
@@ -476,7 +529,7 @@ globalClock = core.Clock()
 # Start the experiment part
 print("Start Experiment")
 Experiment = PeripheralStimTask(
-    "experiment",
+    mode,
     default_size,
     experiment_list,
     stim_list,

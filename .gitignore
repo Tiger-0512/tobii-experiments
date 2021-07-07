@@ -7,8 +7,9 @@ out.csv
 
 imagenet.drawio
 
-images
-data
+images/
+data/
+results/
 
 test.py
 opengl_test.py

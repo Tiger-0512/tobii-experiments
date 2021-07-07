@@ -1,7 +1,3 @@
-"""
-Excute this experiment in 'experiments' directory
-"""
-
 from __future__ import absolute_import, division, print_function
 import random, glob, math, os, argparse
 import numpy as np
@@ -22,15 +18,15 @@ def place_image(win, image_path, an2px, eccentricity, ori, size):
         win,
         image=Image.open(image_path),
         pos=(
-            an2px * eccentricity * math.sin(math.radians(ori)),
             an2px * eccentricity * math.cos(math.radians(ori)),
+            an2px * eccentricity * math.sin(math.radians(ori)),
         ),
         size=size,
     )
     return stim
 
 
-class PeripheralStimTask:
+class PeripheralSearchTask:
     # 13 Classes
     target_class = "cat"
     non_target_classes = [
@@ -48,10 +44,19 @@ class PeripheralStimTask:
         "otter",
     ]
 
+    keys = [["b", "a", "c", "d"], ["f", "e", "g", "h"], ["j", "i", "k", "l"]]
+    key_to_pos = defaultdict(list)
+    for i, k_list in enumerate(keys):
+        for j, k in enumerate(k_list):
+            key_to_pos[k] = [i, j]
+    print(key_to_pos)
+
     def __init__(
         self,
-        mode,
+        win,
+        an2px,
         default_size,
+        eccentricities,
         condition_list,
         stim_list,
         n_reps,
@@ -60,8 +65,10 @@ class PeripheralStimTask:
         feedbacks,
         rest,
     ):
-        self.mode = mode
+        self.win = win
+        self.an2px = an2px
         self.default_size = default_size
+        self.eccentricities = eccentricities
         self.condition_list = condition_list
         self.stim_list = stim_list
         self.n_reps = n_reps
@@ -72,22 +79,45 @@ class PeripheralStimTask:
 
         # Store images path in dictionary
         self.image_path_dict = defaultdict(list)
-        if self.mode == "random":
-            self.image_path_dict[PeripheralStimTask.target_class] = glob.glob(
-                "../data/{}/*".format(PeripheralStimTask.target_class)
-            )
-        else:  # self.mode == "fixed"
-            # When the target-class is "cat"
-            fixed_target_path = "../data/cat/cutout_removed_n02123045_4812.png"
-            self.image_path_dict[PeripheralStimTask.target_class] = [fixed_target_path]
-        for c in PeripheralStimTask.non_target_classes:
+        self.image_path_dict[PeripheralSearchTask.target_class] = glob.glob(
+            "../data/{}/*".format(PeripheralSearchTask.target_class)
+        )
+        for c in PeripheralSearchTask.non_target_classes:
             self.image_path_dict[c] = glob.glob("../data/{}/*".format(c))
+
+    def ask_question(self):
+        visual.ImageStim(
+            self.win,
+            image="../data/stimuli_arrangement.png",
+            pos=(0, 0),
+            size=(
+                (2 * self.eccentricities[2] / math.sqrt(2) + 8) * self.an2px,
+                (2 * self.eccentricities[2] / math.sqrt(2) + 8) * self.an2px,
+            ),
+        ).draw()
+        for i, k_list in enumerate(PeripheralSearchTask.keys):
+            for j, k in enumerate(k_list):
+                visual.TextStim(
+                    self.win,
+                    text=k,
+                    pos=(
+                        self.an2px
+                        * self.eccentricities[i]
+                        * math.cos(math.radians(j % 4 * 90 + ((i + 1) % 2) * 45)),
+                        self.an2px
+                        * self.eccentricities[i]
+                        * math.sin(math.radians(j % 4 * 90 + ((i + 1) % 2) * 45)),
+                    ),
+                    height=self.an2px * 1.5,
+                    color=(0, 0, 0),
+                ).draw()
+        self.question.draw()
 
     def change_stim(self, cur_trial):
         # Change non-target stimuli
         _non_target_classes = random.sample(
-            PeripheralStimTask.non_target_classes,
-            len(PeripheralStimTask.non_target_classes),
+            PeripheralSearchTask.non_target_classes,
+            len(PeripheralSearchTask.non_target_classes),
         )
         for i, stim in enumerate(self.stim_list):
             image_path = random.choice(self.image_path_dict[_non_target_classes[i]])
@@ -108,14 +138,13 @@ class PeripheralStimTask:
                 )
 
         # Change target stimulus
-        if cur_trial["state"] == 1:
-            image_path = random.choice(
-                self.image_path_dict[PeripheralStimTask.target_class]
-            )
-            self.stim_list[4 * cur_trial["pos"] + cur_trial["ori"]].image = Image.open(
-                image_path
-            )
-            cur_trial[PeripheralStimTask.target_class] = image_path
+        image_path = random.choice(
+            self.image_path_dict[PeripheralSearchTask.target_class]
+        )
+        self.stim_list[4 * cur_trial["pos"] + cur_trial["ori"]].image = Image.open(
+            image_path
+        )
+        cur_trial[PeripheralSearchTask.target_class] = image_path
 
         # Draw stimuli
         for stim in self.stim_list:
@@ -146,8 +175,8 @@ class PeripheralStimTask:
         result = pd.DataFrame(
             index=[],
             columns=list(self.condition_list[0].keys())
-            + [PeripheralStimTask.target_class]
-            + PeripheralStimTask.non_target_classes,
+            + [PeripheralSearchTask.target_class]
+            + PeripheralSearchTask.non_target_classes,
         )
 
         # Start trials
@@ -157,29 +186,28 @@ class PeripheralStimTask:
             # Show fixation point
             self.fixation.fillColor = (64, 64, 64)
             self.fixation.draw()
-            win.flip()
+            self.win.flip()
             event.waitKeys()
 
             # Change fixation point's color
             self.fixation.fillColor = (192, 192, 192)
             self.fixation.draw()
-            win.flip()
+            self.win.flip()
             # Gitter
             core.wait(0.5)
 
             # Change stimuli
             self.change_stim(cur_trial)
-            win.flip()
+            self.win.flip()
             trial_onset = trial_clock.getTime()
-            core.wait(1.0)
+            event.waitKeys()
 
-            # Show fixation point
-            self.fixation.draw()
-            win.flip()
-            core.wait(0.5)
+            # When the subject find the target
+            trial_offset = trial_clock.getTime()
+            cur_trial["durationTime"] = trial_offset - trial_onset
 
             # Show the question
-            self.question.draw()
+            self.ask_question()
             win.flip()
 
             # Answer the question or Exit
@@ -187,26 +215,31 @@ class PeripheralStimTask:
             while flag == 1:
                 allKeys = event.waitKeys()
                 for key in allKeys:
-                    if key in ["0", "1"]:
-                        trial_offset = trial_clock.getTime()
-                        cur_trial["durationTime"] = trial_offset - trial_onset
-                        cur_trial["ans"] = key
+                    if key in sum(PeripheralSearchTask.keys, []):
+                        cur_trial["ans"] = PeripheralSearchTask.key_to_pos[key]
                         flag = False
                     elif key in ["q", "escape"]:
                         print(result)
-                        result.to_csv("../data/result.csv")
+                        result.to_csv("../results/eye_movement/tmp_result.csv")
                         core.quit()
+
+            print(cur_trial["ans"], cur_trial["pos"], cur_trial["ori"])
+
+            # Show feedback
+            if (
+                cur_trial["ans"][0] == cur_trial["pos"]
+                and cur_trial["ans"][1] == cur_trial["ori"]
+            ):
+                self.feedbacks[0].draw()
+                cur_trial["correct"] = 1
+            else:
+                self.feedbacks[1].draw()
+                cur_trial["correct"] = 0
+            self.win.flip()
+            event.waitKeys(maxWait=1, keyList=["space", "enter"])
 
             # Store current trial data in df
             result = result.append(cur_trial, ignore_index=True)
-
-            # Show feedback
-            if int(cur_trial["ans"]) == cur_trial["state"]:
-                self.feedbacks[0].draw()
-            else:
-                self.feedbacks[1].draw()
-            win.flip()
-            event.waitKeys(maxWait=1, keyList=["space", "enter"])
 
             count += 1
             if (
@@ -215,7 +248,7 @@ class PeripheralStimTask:
             ):
                 # Take a short break
                 self.rest.draw()
-                win.flip()
+                self.win.flip()
                 core.wait(60)
         return result
 
@@ -223,27 +256,18 @@ class PeripheralStimTask:
 # Set arguments
 parser = argparse.ArgumentParser(description="Peripheral Search Tasks")
 parser.add_argument("device", help="'iMac' or 'Macbook' (Air 2017)")
-parser.add_argument(
-    "--mode",
-    default="random",
-    help="target-class is 'random' image from list or 'fixed' on the one image.",
-)
 args = parser.parse_args()
 device = args.device
-mode = args.mode
 
 # Check arguments
-if device == "iMac":
+if device in ["iMac", "imac"]:
     print("This device is iMac")
     va_arg = (57.0, 33.5)
-elif device == "Macbook":
+elif device in ["Macbook", "macbook"]:
     va_arg = (57.0, 17.9)
     print("This device is Macbook")
 else:
     print("Device is not found.")
-    core.quit()
-if not mode in ["random", "fixed"]:
-    print("Such a mode doesn't exist.")
     core.quit()
 
 
@@ -315,34 +339,31 @@ eccentricity_level_3 = round(
 )
 
 # This is the example to explain the experiment
-example_list = [{"size": 1, "rate": 2, "state": 1, "pos": 1, "ori": 3}]
+example_list = [{"size": 1, "rate": 2, "pos": 1, "ori": 2}]
 # Practice list: 2 * 2 * 2 = 8 conditions
 # Condition list: 2 * 2 * 2 * 3 * 4 = 96 conditions
 practice_list = []
 experiment_list = []
 for size in [1, 2]:  # 2 stimuli size
     for rate in [1, 2]:  # 2 magnification rates to periphery
-        for state in [0, 1]:  # 2 state (whether the target exists or not)
-            practice_list.append(
-                {
-                    "size": size,
-                    "rate": rate,
-                    "state": state,
-                    "pos": random.randrange(3),
-                    "ori": random.randrange(4),
-                }
-            )
-            for pos in [0, 1, 2]:  # 3 positions (0: center)
-                for ori in [0, 1, 2, 3]:  # 4 directions
-                    experiment_list.append(
-                        {
-                            "size": size,
-                            "rate": rate,
-                            "state": state,
-                            "pos": pos,
-                            "ori": ori,
-                        }
-                    )
+        practice_list.append(
+            {
+                "size": size,
+                "rate": rate,
+                "pos": random.randrange(3),
+                "ori": random.randrange(4),
+            }
+        )
+        for pos in [0, 1, 2]:  # 3 positions (0: center)
+            for ori in [0, 1, 2, 3]:  # 4 directions
+                experiment_list.append(
+                    {
+                        "size": size,
+                        "rate": rate,
+                        "pos": pos,
+                        "ori": ori,
+                    }
+                )
 
 # Create window
 win = visual.Window(
@@ -408,10 +429,11 @@ introduction_2 = visual.TextStim(
     pos=(0.30 * display_size[0], 0),
     text="This is the example of the stimuli. \n\n"
     + "Before the stimuli presented, \n the fixation point is shown. \n\n"
-    + "When you hit 'space' Key, \n stimuli are presented in 1 second. \n\n"
-    + "Please answer the question \n whether cats exist in the stimuli. \n\n"
-    + "In this case, the answer is 'Yes'. \n\n"
-    + "Notice: When you look at the stimuli, \n please focus on the center of the display.",
+    + "When you hit 'space' Key, \n stimuli are presented. \n\n"
+    + "After that, you can move your eye. \n\n"
+    + "When you find the 'cat', \n hit a Key and answer the question, \n 'Where was the cat?' \n\n"
+    + "You answer with the keyboard. \n\n"
+    + "Notice: When the stimuli are presented, \n please focus on the center of the display.",
 )
 introduction_3 = visual.TextStim(
     win,
@@ -436,8 +458,8 @@ fixation = visual.Circle(
 # Question
 question = visual.TextStim(
     win,
-    pos=(0, 0.05 * display_size[1]),
-    text="Was there cats?  Please press '0' or '1'. \n\n" "'0': No \n\n" "'1': Yes",
+    pos=(0.30 * display_size[0], 0),
+    text="Where Was the cat? \n Please press the Key \n corresponding to the position",
 )
 # Feedback
 feedback_1 = visual.TextStim(
@@ -464,9 +486,11 @@ introduction_1.draw()
 win.flip()
 event.waitKeys()
 print("Start Example")
-Example = PeripheralStimTask(
-    mode,
+Example = PeripheralSearchTask(
+    win,
+    an2px,
     default_size,
+    [eccentricity_level_1, eccentricity_level_2, eccentricity_level_3],
     example_list,
     stim_list,
     1,
@@ -482,22 +506,6 @@ for trial in example_trials:
     win.flip()
     event.waitKeys()
 
-if mode == "fixed":
-    visual.TextStim(
-        win,
-        pos=(0, 0.10 * display_size[1]),
-        text="This cat is the target. \n\n"
-        + "This target image doesn't change \n in the whole of the experiment.",
-    ).draw()
-    visual.ImageStim(
-        win,
-        image="../data/cat/cutout_removed_n02123045_4812.png",
-        pos=(0, -0.10 * display_size[1]),
-        size=list(map(lambda x: 4 * x, default_size)),
-    ).draw()
-    win.flip()
-    event.waitKeys()
-
 
 # Start the practice part
 introduction_3.draw()
@@ -505,9 +513,11 @@ win.flip()
 event.waitKeys()
 
 print("Start Practice")
-Practice = PeripheralStimTask(
-    mode,
+Practice = PeripheralSearchTask(
+    win,
+    an2px,
     default_size,
+    [eccentricity_level_1, eccentricity_level_2, eccentricity_level_3],
     practice_list,
     stim_list,
     1,
@@ -528,12 +538,14 @@ globalClock = core.Clock()
 
 # Start the experiment part
 print("Start Experiment")
-Experiment = PeripheralStimTask(
-    mode,
+Experiment = PeripheralSearchTask(
+    win,
+    an2px,
     default_size,
+    [eccentricity_level_1, eccentricity_level_2, eccentricity_level_3],
     experiment_list,
     stim_list,
-    2,
+    4,
     fixation,
     question,
     [feedback_1, feedback_2],
@@ -542,7 +554,7 @@ Experiment = PeripheralStimTask(
 experiment_trials = Experiment.create_trial()
 result = Experiment.excute_trial(experiment_trials)
 print(result)
-result.to_csv("../data/{}.csv".format(file_name))
+result.to_csv("../results/eye_movement/{}.csv".format(file_name))
 
 # trials.saveAsPickle(file_name='testData')
 
@@ -553,7 +565,7 @@ result.to_csv("../data/{}.csv".format(file_name))
 endthank = visual.TextStim(win, pos=[0, 0.15], color=(1, 1, 1), text="Thank you!")
 endthank.draw()
 win.flip()
-event.waitKeys()  # wait for participant to respond
+core.wait(1.0)
 
 win.close()
 core.quit()

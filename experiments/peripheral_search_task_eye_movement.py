@@ -85,34 +85,6 @@ class PeripheralSearchTask:
         for c in PeripheralSearchTask.non_target_classes:
             self.image_path_dict[c] = glob.glob("../data/{}/*".format(c))
 
-    def ask_question(self):
-        visual.ImageStim(
-            self.win,
-            image="../data/stimuli_arrangement.png",
-            pos=(0, 0),
-            size=(
-                (2 * self.eccentricities[2] / math.sqrt(2) + 8) * self.an2px,
-                (2 * self.eccentricities[2] / math.sqrt(2) + 8) * self.an2px,
-            ),
-        ).draw()
-        for i, k_list in enumerate(PeripheralSearchTask.keys):
-            for j, k in enumerate(k_list):
-                visual.TextStim(
-                    self.win,
-                    text=k,
-                    pos=(
-                        self.an2px
-                        * self.eccentricities[i]
-                        * math.cos(math.radians(j % 4 * 90 + ((i + 1) % 2) * 45)),
-                        self.an2px
-                        * self.eccentricities[i]
-                        * math.sin(math.radians(j % 4 * 90 + ((i + 1) % 2) * 45)),
-                    ),
-                    height=self.an2px * 1.5,
-                    color=(0, 0, 0),
-                ).draw()
-        self.question.draw()
-
     def change_stim(self, cur_trial):
         # Change non-target stimuli
         _non_target_classes = random.sample(
@@ -154,6 +126,34 @@ class PeripheralSearchTask:
         self.fixation.fillColor = (192, 192, 192)
         self.fixation.draw()
         return cur_trial
+
+    def ask_question(self):
+        visual.ImageStim(
+            self.win,
+            image="../data/stimuli_arrangement.png",
+            pos=(0, 0),
+            size=(
+                (2 * self.eccentricities[2] / math.sqrt(2) + 8) * self.an2px,
+                (2 * self.eccentricities[2] / math.sqrt(2) + 8) * self.an2px,
+            ),
+        ).draw()
+        for i, k_list in enumerate(PeripheralSearchTask.keys):
+            for j, k in enumerate(k_list):
+                visual.TextStim(
+                    self.win,
+                    text=k.upper(),
+                    pos=(
+                        self.an2px
+                        * self.eccentricities[i]
+                        * math.cos(math.radians(j % 4 * 90 + ((i + 1) % 2) * 45)),
+                        self.an2px
+                        * self.eccentricities[i]
+                        * math.sin(math.radians(j % 4 * 90 + ((i + 1) % 2) * 45)),
+                    ),
+                    height=self.an2px * 1.5,
+                    color=(0, 0, 0),
+                ).draw()
+        self.question.draw()
 
     def create_trial(self):
         trials = data.TrialHandler(
@@ -249,7 +249,7 @@ class PeripheralSearchTask:
                 # Take a short break
                 self.rest.draw()
                 self.win.flip()
-                core.wait(60)
+                core.wait(30)
         return result
 
 
@@ -459,7 +459,7 @@ fixation = visual.Circle(
 question = visual.TextStim(
     win,
     pos=(0.30 * display_size[0], 0),
-    text="Where Was the cat? \n Please press the Key \n corresponding to the position",
+    text="Where Was the cat? \n Please press the Key \n corresponding to the position.",
 )
 # Feedback
 feedback_1 = visual.TextStim(

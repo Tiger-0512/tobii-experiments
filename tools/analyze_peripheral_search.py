@@ -40,6 +40,7 @@ if not os.path.isfile(os.path.basename(__file__)):
         "../results/eye_movement/sou_1_2021_Jul_08_1500.csv",
         "../results/eye_movement/taiga_2_2021_Jul_08_1539.csv",
         "../results/eye_movement/yh_2_2021_Jul_09_1326.csv",
+        "../results/eye_movement/miyoshi_2_2021_Jul_12_1417.csv",
     ]
 
 analyzed_data = defaultdict(list)
